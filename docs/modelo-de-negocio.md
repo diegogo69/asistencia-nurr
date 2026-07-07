@@ -1,11 +1,12 @@
 # Modelo de Negocio: Sistema de Control de Asistencia Unidad de Soporte Técnico ULA-NURR
 
-Este documento contiene la especificación formal del Modelo de Negocio actual (As-Is) para el proceso de control de asistencia de la Unidad de Soporte Técnico de la Universidad de los Andes (ULA-NURR), estructurado bajo los componentes teóricos del Área Temática 1 de la cátedra Ingeniería del Software II.
-
+Este documento contiene la especificación formal del Modelo de Negocio actual (As-Is) para el proceso de control de asistencia de la Unidad de Soporte Técnico de la Universidad de los Andes (ULA-NURR).
 
 ## Actores del Negocio
+
 Son las personas, roles o entidades que participan directamente en el día a día de la unidad o interactúan con sus procesos:
-Coordinador de la Unidad: Encargado de supervisar los asuntos internos, planificar los horarios, custodiar los registros y validar la asistencia del personal y pasantes.
+
+**Coordinador de la Unidad**: Encargado de supervisar los asuntos internos, planificar los horarios, custodiar los registros y validar la asistencia del personal y pasantes.
 
 **Técnicos Contratados**: Personal de planta de la institución encargado de realizar labores de mantenimiento preventivo y correctivo de hardware y asistencia directa a usuarios.
 
@@ -17,7 +18,6 @@ Coordinador de la Unidad: Encargado de supervisar los asuntos internos, planific
 
 **Usuarios Universitarios** (Externos): Personal administrativo, docente u obrero de las distintas áreas de la ULA-NURR que solicita los servicios de soporte técnico a la unidad.
 
-
 ## Objetos del Negocio
 
 Son las entidades de información, insumos o herramientas, físicas o digitales, que los actores manipulan, producen o utilizan en el flujo de trabajo:
@@ -28,7 +28,6 @@ Son las entidades de información, insumos o herramientas, físicas o digitales,
 
 **Ticket / Incidencia del CAU**: Registro digital de solicitudes de soporte técnico generado por los usuarios externos a través del sistema de software CAU de la universidad.
 
-
 ## Procesos del Negocio
 
 El proceso es el flujo general para lograr un objetivo. Representan los flujos macro de trabajo lógicamente ordenados para cumplir los objetivos de control interno de la unidad:
@@ -36,7 +35,6 @@ El proceso es el flujo general para lograr un objetivo. Representan los flujos m
 1. **Control Diario de Asistencia**: Abarca las tareas consecutivas orientadas al registro del ingreso y egreso diario de todo el personal de la unidad técnico-operativa.
 
 2. **Auditoría y Validación de Horas**: Abarca el flujo de revisión, fiscalización y contraste manual de los registros históricos frente a solicitudes, reportes de incidencias o informes de pasantías.
-
 
 ## Actividades del Negocio
 
@@ -57,7 +55,6 @@ Cierre y Archivo: Al culminar el turno operativo, el Coordinador retira la hoja 
 - **Revisión por Incidencias**: Ante la detección de ausentismo o impuntualidad recurrente, el Coordinador busca manualmente en la carpeta de archivo las hojas físicas de las fechas requeridas para verificar las firmas.
 
 - **Cotejo de Informes de Pasantías**: Al recibir el Informe de Control de Visitas por parte de un pasante, el Coordinador realiza una validación visual manual cruzando las horas declaradas por el estudiante con los registros de la carpeta física, firmando el informe únicamente si los datos concuerdan.
-
 
 ## Reglas del Negocio
 
