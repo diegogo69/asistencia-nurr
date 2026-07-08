@@ -26,8 +26,6 @@ Son las entidades de información, insumos o herramientas, físicas o digitales,
 
 **Informe de Control de Visitas**: Documento administrativo-académico que los pasantes (técnicos y programadores) llenan con sus actividades diarias para certificar y validar sus horas acumuladas en el desarrollo de sus pasantías.
 
-**Ticket / Incidencia del CAU**: Registro digital de solicitudes de soporte técnico generado por los usuarios externos a través del sistema de software CAU de la universidad.
-
 ## Procesos del Negocio
 
 El proceso es el flujo general para lograr un objetivo. Representan los flujos macro de trabajo lógicamente ordenados para cumplir los objetivos de control interno de la unidad:
