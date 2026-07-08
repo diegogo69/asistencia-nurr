@@ -48,3 +48,8 @@ Definen los atributos de calidad, restricciones tecnológicas y estándares de a
 - **RNF-3.2 Interfaz Intuitiva y Retroalimentación:** La interfaz gráfica debe ser fácil de usar y comunicar de forma clara mensajes de éxito, o bien, emitir alertas explícitas ante fallos de red o errores biométricos.
 - **RNF-3.3 Rendimiento en Red Local:** El sistema debe procesar las marcaciones de asistencia de forma rápida, aprovechando la baja latencia de la red local (LAN).
 - **RNF-3.4 Manejo de Fallos de Hardware:** Ante la indisponibilidad de la cámara web, el sistema debe permitir registrar la asistencia utilizando únicamente el documento de identificación y el Código QR como mecanismo de contingencia para garantizar la operatividad de la unidad.
+
+## Escalabilidad y Adaptabilidad
+
+- **RNF-4.1 Diseño Paramétrico:** La arquitectura del sistema debe ser lo suficientemente flexible y modular para permitir que las dependencias, roles y flujos de trabajo de cualquier otra área de la institución (ULA-NURR) se configuren dinámicamente desde la base de datos, evitando dependencias específicas de la unidad de soporte técnico.
+- **RNF-4.2 Portabilidad:** El software debe ser diseñado de manera genérica para facilitar su despliegue y funcionamiento en otras instituciones externas.
