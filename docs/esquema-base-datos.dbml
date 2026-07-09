@@ -1,0 +1,110 @@
+Table departamentos {
+  id int [pk, increment, note: 'Identificador único del departamento']
+  nombre varchar(100) [note: 'Nombre descriptivo del departamento (ej: "Soporte Técnico")']
+  tipo enum_tipo_departamento [note: 'Clasificación jerárquica del departamento']
+  
+  Note: 'Almacena la estructura organizativa de la institución.'
+}
+
+enum enum_tipo_departamento {
+  dirección
+  coordinación
+  sección
+  oficina
+}
+
+Table roles {
+  id int [pk, increment, note: 'Identificador único del rol']
+  nombre varchar(50) [note: 'Nombre del rol (ej: "Coordinador", "Técnico Contratado", "Pasante Técnico")']
+  requiere_password boolean [note: 'Indica si el rol tiene acceso al módulo de gestión administrativa mediante contraseña']
+  
+  Note: 'Define los roles asignados a los usuarios del sistema y sus privilegios.'
+}
+
+Table horarios_plantillas {
+  id int [pk, increment, note: 'Identificador único de la plantilla']
+  nombre varchar(100) [note: 'Nombre descriptivo de la plantilla']
+  tipo enum_tipo_horario [note: 'Define si el horario se compone de bloques fijos obligatorios o si es flexible']
+  horas_requeridas int [note: 'Cantidad mínima de horas a cumplir por semana (usado primordialmente para pasantes)']
+  
+  Note: 'Define los contenedores lógicos de horarios para clasificar si son fijos o flexibles.'
+}
+
+enum enum_tipo_horario {
+  fijo
+  flexible
+}
+
+Table horarios_detalles {
+  id int [pk, increment, note: 'Identificador único del bloque de detalle']
+  horario_plantilla_id int [ref: > horarios_plantillas.id, note: 'Referencia a la plantilla de horario padre']
+  dia_semana tinyint [note: 'Día de la semana (1 = Lunes, 2 = Martes, ..., 7 = Domingo)']
+  hora_entrada time [note: 'Hora exacta obligatoria para registrar el ingreso']
+  hora_salida time [note: 'Hora exacta obligatoria para registrar la salida']
+  
+  Note: 'Detalla los bloques horarios específicos asignados por cada día de la semana para una plantilla fija.'
+}
+
+Table redes_autorizadas {
+  id int [pk, increment, note: 'Identificador único de la regla de red']
+  direccion_ip varchar(45) [note: 'Dirección IP (IPv4/IPv6) o notación CIDR (rango de red)']
+  descripcion varchar(255) [note: 'Comentario descriptivo del punto físico de conexión']
+  activo boolean [note: 'Indica si la regla de red está vigente']
+  
+  Note: 'Contiene la lista blanca de direcciones IP o subredes desde las cuales es válido registrar asistencias.'
+}
+
+Table usuarios {
+  id int [pk, increment, note: 'Identificador único de usuario']
+  horario_id int [ref: > horarios_plantillas.id, note: 'Referencia a la plantilla de horario asignada']
+  rol_id int [ref: > roles.id, note: 'Referencia al rol asignado']
+  departamento_id int [ref: > departamentos.id, note: 'Referencia a la unidad organizacional a la que pertenece']
+  documento_identidad varchar(20) [unique, note: 'Cédula de identidad o pasaporte del usuario']
+  nombre varchar(100) [note: 'Nombres del usuario']
+  apellido varchar(100) [note: 'Apellidos del usuario']
+  vector_biometrico text [null, note: 'Representación matemática serializada de los vectores faciales para el reconocimiento biométrico']
+  codigo_qr varchar(255) [unique, null, note: 'Hash/código único de credencial QR generado para el usuario']
+  password_hash varchar(255) [null, note: 'Contraseña encriptada para el acceso a la web administrativa (solo perfiles autorizados)']
+  activo boolean [note: 'Estado lógico del usuario (Activo/Inactivo)']
+
+  Note: 'Entidad principal que almacena los datos de los técnicos, programadores, pasantes y coordinadores.'
+}
+
+Table asistencias {
+  id int [pk, increment, note: 'Identificador del registro']
+  usuario_id int [ref: > usuarios.id, note: 'Referencia al usuario que realiza la marcación']
+  fecha date [note: 'Fecha del registro']
+  hora_entrada time [note: 'Hora de marcación del ingreso']
+  hora_salida time [null, note: 'Hora de marcación del egreso (puede ser nula temporalmente si no ha salido)']
+  estado_cumplimiento enum_estado_cumplimiento [note: 'Categorización automática calculada por el sistema']
+  ip_registro_entrada varchar(45) [note: 'IP desde la cual se marcó la entrada']
+  ip_registro_salida varchar(45) [null, note: 'IP desde la cual se marcó la salida']
+  metodo_validacion enum_metodo_validacion [note: 'Método utilizado para verificar la identidad en el dispositivo de marcación']
+  
+  Note: 'Tabla de transacciones históricas que guarda las marcaciones diarias de entrada y salida del personal.'
+}
+
+enum enum_estado_cumplimiento {
+  puntual
+  retraso
+  anticipada
+  incompleto
+  pendiente
+}
+
+enum enum_metodo_validacion {
+  facial
+  qr
+}
+
+Table asistencias_pendientes {
+  id int [pk, increment, note: 'Identificador único de la resolución']
+  asistencia_id int [ref: > asistencias.id, note: 'Referencia al registro de asistencia modificado']
+  coordinador_id int [ref: > usuarios.id, note: 'Referencia al usuario (Coordinador) que aprobó la resolución']
+  observacion text [note: 'Justificación del cambio o nota explicativa']
+  fecha_resolucion datetime [note: 'Fecha y hora exactas en que se guardó la modificación']
+  estado_anterior varchar(20) [note: 'Estado en el que se encontraba la asistencia antes de la resolución']
+  estado_nuevo varchar(20) [note: 'Nuevo estado asignado tras la evaluación']
+  
+  Note: 'Almacena el registro de auditoría de las correcciones hechas manualmente por el coordinador sobre las asistencias inconsistentes o incompletas.'
+}
