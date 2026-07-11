@@ -8,15 +8,9 @@ Son las personas, roles o entidades que participan directamente en el día a dí
 
 **Coordinador de la Unidad**: Encargado de supervisar los asuntos internos, planificar los horarios, custodiar los registros y validar la asistencia del personal y pasantes.
 
-**Técnicos Contratados**: Personal de planta de la institución encargado de realizar labores de mantenimiento preventivo y correctivo de hardware y asistencia directa a usuarios.
+**Personal Contratado**: Personal de planta de la institución encargado de realizar labores de mantenimiento preventivo y correctivo de hardware y asistencia directa a usuarios, en el rol de técnicos; o labores de soporte lógico, desarrollo interno y mantenimiento de sistemas de la unidad, en el rol de programadores.
 
-**Programadores Contratados**: Personal de planta de la institución encargado del soporte lógico, desarrollo interno y mantenimiento de sistemas de la unidad.
-
-**Pasantes Técnicos**: Estudiantes universitarios en periodo de práctica profesional que apoyan en las labores de soporte técnico de hardware.
-
-**Pasantes Programadores**: Estudiantes universitarios en periodo de práctica profesional que apoyan en las áreas de desarrollo de software lógico.
-
-**Usuarios Universitarios** (Externos): Personal administrativo, docente u obrero de las distintas áreas de la ULA-NURR que solicita los servicios de soporte técnico a la unidad.
+**Pasantes**: Estudiantes universitarios en periodo de práctica profesional que apoyan en las labores de soporte técnico de hardware y desarrollo de software lógico.
 
 ## Objetos del Negocio
 
