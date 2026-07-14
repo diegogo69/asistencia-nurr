@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unidades Organizacionales - Asistencia NURR</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Asistencia NURR</h2>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="unidades.html" class="active">Unidades Organizacionales</a></li>
+                <li><a href="horarios.html">Gestión de Horarios</a></li>
+                <li><a href="redes.html">Rangos de Red</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Gestión de Unidades Organizacionales</h1>
+        </header>
+
+        <section class="content-panel">
+            <div class="toolbar">
+                <button class="btn btn-primary" data-modal-target="modal-unidad">Agregar Unidad</button>
+                <div class="search-bar">
+                    <input type="text" placeholder="Filtrar por nombre o tipo...">
+                    <button class="btn btn-secondary">Buscar</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre de Unidad</th>
+                            <th>Tipo de Unidad</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Soporte Técnico</td>
+                            <td>Sección</td>
+                            <td class="actions">
+                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-unidad">Editar</button>
+                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Seguro que desea eliminar esta unidad?')">Eliminar</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Coordinación Académica</td>
+                            <td>Coordinación</td>
+                            <td class="actions">
+                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-unidad">Editar</button>
+                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Seguro que desea eliminar esta unidad?')">Eliminar</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Recursos Humanos</td>
+                            <td>Oficina</td>
+                            <td class="actions">
+                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-unidad">Editar</button>
+                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Seguro que desea eliminar esta unidad?')">Eliminar</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <button disabled>Primero</button>
+                <button disabled>Anterior</button>
+                <span>Página 1 de 1</span>
+                <button disabled>Siguiente</button>
+                <button disabled>Último</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Agregar/Editar Unidad -->
+    <div class="modal-overlay" id="modal-unidad">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Formulario de Unidad Organizacional</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form class="simulate-save">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="nombre_unidad">Nombre de la Unidad</label>
+                        <input type="text" id="nombre_unidad" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tipo_unidad">Tipo de Unidad</label>
+                        <select id="tipo_unidad" required>
+                            <option value="">Seleccione...</option>
+                            <option value="direccion">Dirección</option>
+                            <option value="coordinacion">Coordinación</option>
+                            <option value="seccion">Sección</option>
+                            <option value="oficina">Oficina</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-btn" data-modal-close>Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/scripts.js"></script>
+</body>
+</html>

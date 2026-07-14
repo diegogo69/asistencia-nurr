@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios - Asistencia NURR</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Asistencia NURR</h2>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="usuarios.html" class="active">Gestión de Usuarios</a></li>
+                <li><a href="biometria.html">Registro Biométrico</a></li>
+                <li><a href="credencial.html">Credencial QR</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Gestión de Usuarios</h1>
+        </header>
+
+        <section class="content-panel">
+            <div class="toolbar">
+                <button class="btn btn-primary" data-modal-target="modal-usuario">Agregar Usuario</button>
+                <div class="search-bar">
+                    <input type="text" placeholder="Buscar por cédula, nombre, rol...">
+                    <button class="btn btn-secondary">Buscar</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Documento</th>
+                            <th>Nombres y Apellidos</th>
+                            <th>Rol</th>
+                            <th>Departamento</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>V-12345678</td>
+                            <td>Juan Antonio Pérez</td>
+                            <td>Personal Administrativo</td>
+                            <td>Soporte Técnico</td>
+                            <td><span class="text-success">Activo</span></td>
+                            <td class="actions">
+                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-usuario">Editar</button>
+                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Desactivar usuario?')">Desactivar</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>V-98765432</td>
+                            <td>María Gabriela Rojas</td>
+                            <td>Administrador Sistema</td>
+                            <td>Coordinación Académica</td>
+                            <td><span class="text-success">Activo</span></td>
+                            <td class="actions">
+                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-usuario">Editar</button>
+                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Desactivar usuario?')">Desactivar</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination">
+                <button disabled>Primero</button>
+                <button disabled>Anterior</button>
+                <span>Página 1 de 5</span>
+                <button>Siguiente</button>
+                <button>Último</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Agregar/Editar Usuario -->
+    <div class="modal-overlay" id="modal-usuario">
+        <div class="modal large">
+            <div class="modal-header">
+                <h3>Formulario de Usuario</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form class="simulate-save">
+                <div class="modal-body">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Documento de Identidad <span style="color:red">*</span></label>
+                            <input type="text" id="doc_identidad" required onblur="if(this.value==='V-12345678'){this.style.borderColor='red'; document.getElementById('error_doc').style.display='block'; document.getElementById('btn_guardar_usr').disabled=true;}else{this.style.borderColor=''; document.getElementById('error_doc').style.display='none'; document.getElementById('btn_guardar_usr').disabled=false;}">
+                            <small id="error_doc" style="color: var(--danger-color); display: none; margin-top: 5px;">El documento ingresado ya se encuentra registrado.</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombres</label>
+                            <input type="text" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellidos</label>
+                            <input type="text" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Departamento / Unidad</label>
+                            <select required>
+                                <option value="">Seleccione...</option>
+                                <option>Soporte Técnico</option>
+                                <option>Coordinación Académica</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Plantilla de Horario</label>
+                            <select required>
+                                <option value="">Seleccione...</option>
+                                <option>Turno Administrativo Mañana</option>
+                                <option>Pasantes Medio Tiempo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Rol del Sistema</label>
+                            <select id="rol_usuario" required onchange="document.getElementById('pwd_group').style.display = (this.value === 'admin' || this.value === 'supervisor') ? 'block' : 'none';">
+                                <option value="empleado">Empleado Regular (Solo marcación)</option>
+                                <option value="supervisor">Supervisor de Unidad</option>
+                                <option value="admin">Administrador del Sistema</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="pwd_group" style="display: none; border-top: 1px solid #eee; padding-top: 15px; margin-top: 10px;">
+                        <label>Contraseña de Acceso (Para roles administrativos)</label>
+                        <input type="password" placeholder="Asigne una contraseña temporal">
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-btn" data-modal-close>Cerrar</button>
+                    <button type="submit" class="btn btn-primary" id="btn_guardar_usr">Guardar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/scripts.js"></script>
+</body>
+</html>

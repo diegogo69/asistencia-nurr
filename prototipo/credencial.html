@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credencial QR - Asistencia NURR</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Asistencia NURR</h2>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="usuarios.html">Gestión de Usuarios</a></li>
+                <li><a href="biometria.html">Registro Biométrico</a></li>
+                <li><a href="credencial.html" class="active">Credencial QR</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Credencial y Registro QR</h1>
+        </header>
+
+        <section class="content-panel" style="max-width: 800px; margin: 0 auto; display: flex; gap: 40px; flex-wrap: wrap;">
+            
+            <div style="flex: 1; min-width: 300px;">
+                <h3>Seleccionar Usuario</h3>
+                <div class="form-group" style="margin-top: 15px;">
+                    <input type="text" placeholder="Buscar por cédula o nombre...">
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <p style="font-size: 14px; margin-bottom: 5px;"><strong>Usuario Seleccionado:</strong></p>
+                    <div style="background-color: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <p><strong>Nombres:</strong> Ana María</p>
+                        <p><strong>Apellidos:</strong> Silva Rojas</p>
+                        <p><strong>Documento:</strong> V-22334455</p>
+                        <p><strong>Departamento:</strong> Coordinación Académica</p>
+                        <p><strong>Rol:</strong> Personal Docente</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center;">
+                <h3>Código QR Generado</h3>
+                <div class="qr-container">
+                    <div class="qr-box">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ULA-NURR-V22334455-SIMULADO" alt="Código QR Simulado">
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                        <button class="btn btn-primary" onclick="alert('Descargando credencial en PDF...')">Descargar Credencial QR</button>
+                        <button class="btn btn-secondary" onclick="window.print()">Imprimir Carnet</button>
+                        <button class="btn btn-danger" onclick="alert('Hash antiguo invalidado. Nuevo QR generado.')">Regenerar Código QR</button>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <script src="js/scripts.js"></script>
+</body>
+</html>

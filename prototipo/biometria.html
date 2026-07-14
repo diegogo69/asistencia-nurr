@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enrolamiento Biométrico - Asistencia NURR</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Asistencia NURR</h2>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="usuarios.html">Gestión de Usuarios</a></li>
+                <li><a href="biometria.html" class="active">Registro Biométrico</a></li>
+                <li><a href="credencial.html">Credencial QR</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Registro de Biometría Facial</h1>
+        </header>
+
+        <section class="content-panel" style="max-width: 800px; margin: 0 auto;">
+            <div style="display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap;">
+                
+                <div style="flex: 1; min-width: 300px;">
+                    <h3>Información del Usuario</h3>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>Seleccionar Usuario (Sin patrón biométrico):</label>
+                        <select>
+                            <option>Pedro González - V-11223344</option>
+                            <option>María López - V-55667788</option>
+                        </select>
+                    </div>
+                    
+                    <div style="background-color: #e9ecef; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                        <p style="font-size: 14px; margin-bottom: 10px;"><strong>Instrucciones:</strong></p>
+                        <ul style="font-size: 13px; margin-left: 20px; color: var(--text-light);">
+                            <li>Asegúrese de tener buena iluminación.</li>
+                            <li>Mire directamente a la cámara.</li>
+                            <li>Mantenga el rostro dentro del óvalo guía.</li>
+                            <li>No use gorras ni anteojos oscuros.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="flex: 1; min-width: 300px; text-align: center;">
+                    <div class="camera-preview" style="background-color: #333; height: 250px; margin-top: 0;">
+                        <span style="z-index: 10;">Señal de Cámara Web</span>
+                        <div class="camera-guide"></div>
+                    </div>
+                    
+                    <p style="color: var(--text-light); font-size: 14px; margin-bottom: 15px;">Estado: <span style="color: #ffc107;">Esperando captura...</span></p>
+
+                    <div class="actions" style="justify-content: center;">
+                        <button class="btn btn-secondary">Reintentar</button>
+                        <button class="btn btn-primary" onclick="alert('Patrón biométrico capturado y validado exitosamente.')">Capturar y Validar Rostro</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/scripts.js"></script>
+</body>
+</html>

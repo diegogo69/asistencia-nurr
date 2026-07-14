@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes - Asistencia NURR</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Asistencia NURR</h2>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="asistencias_incompletas.html">Asistencias Incompletas</a></li>
+                <li><a href="historial.html">Historial de Asistencia</a></li>
+                <li><a href="reportes.html" class="active">Reportes</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Generación de Reportes Consolidados</h1>
+        </header>
+
+        <section class="content-panel" style="max-width: 600px; margin: 0 auto;">
+            <p style="margin-bottom: 25px; color: var(--text-light);">Exporte las métricas consolidadas de asistencia (horas trabajadas, puntualidad, retrasos) en formato PDF o Excel.</p>
+            
+            <form class="simulate-save" style="background-color: var(--bg-white); padding: 20px; border: 1px solid var(--border-color); border-radius: 8px;">
+                
+                <h3 style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Parámetros del Reporte</h3>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Fecha Desde <span style="color:red">*</span></label>
+                        <input type="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Hasta <span style="color:red">*</span></label>
+                        <input type="date" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Filtrar por Departamento (Opcional)</label>
+                    <select>
+                        <option value="">Todos los departamentos</option>
+                        <option>Soporte Técnico</option>
+                        <option>Coordinación Académica</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Filtrar por Usuario (Opcional)</label>
+                    <select>
+                        <option value="">Todos los usuarios</option>
+                        <option>Juan Pérez (V-12345678)</option>
+                        <option>Ana Silva (V-22334455)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-top: 25px;">
+                    <label>Formato de Exportación <span style="color:red">*</span></label>
+                    <select required id="formato_exportacion">
+                        <option value="pdf">Documento PDF (Con membrete institucional)</option>
+                        <option value="csv">Archivo de Excel / CSV (Datos planos)</option>
+                    </select>
+                </div>
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <button type="button" class="btn btn-primary" onclick="alert('Generando consolidado de asistencias... El archivo se descargará en breve.')" style="padding: 12px 24px; font-size: 16px;">Procesar y Exportar Reporte</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script src="js/scripts.js"></script>
+</body>
+</html>

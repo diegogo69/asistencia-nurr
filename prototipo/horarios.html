@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horarios - Asistencia NURR</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Asistencia NURR</h2>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="unidades.html">Unidades Organizacionales</a></li>
+                <li><a href="horarios.html" class="active">Gestión de Horarios</a></li>
+                <li><a href="redes.html">Rangos de Red</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Gestión de Horarios</h1>
+        </header>
+
+        <section class="content-panel">
+            <div class="toolbar">
+                <button class="btn btn-primary" data-modal-target="modal-horario">Agregar Plantilla</button>
+                <div class="search-bar">
+                    <input type="text" placeholder="Buscar por nombre o tipo...">
+                    <button class="btn btn-secondary">Buscar</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre de Plantilla</th>
+                            <th>Tipo</th>
+                            <th>Horas Semanales</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Turno Administrativo Mañana</td>
+                            <td>Fijo</td>
+                            <td>35</td>
+                            <td class="actions">
+                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-horario">Editar</button>
+                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Eliminar plantilla?')">Eliminar</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Pasantes Medio Tiempo</td>
+                            <td>Flexible</td>
+                            <td>20</td>
+                            <td class="actions">
+                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-horario">Editar</button>
+                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Eliminar plantilla?')">Eliminar</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination">
+                <button disabled>Primero</button>
+                <button disabled>Anterior</button>
+                <span>Página 1 de 1</span>
+                <button disabled>Siguiente</button>
+                <button disabled>Último</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Agregar/Editar Horario -->
+    <div class="modal-overlay" id="modal-horario">
+        <div class="modal large">
+            <div class="modal-header">
+                <h3>Formulario de Plantilla de Horarios</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form class="simulate-save">
+                <div class="modal-body">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label>Nombre de Plantilla</label>
+                            <input type="text" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <select id="tipo_horario" onchange="document.getElementById('matriz_fijo').style.display = this.value === 'fijo' ? 'block' : 'none'; document.getElementById('horas_flexibles').disabled = this.value === 'fijo';">
+                                <option value="fijo">Fijo</option>
+                                <option value="flexible">Flexible</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Horas Requeridas Semanales</label>
+                        <input type="number" id="horas_flexibles" value="35" disabled style="padding: 8px; width: 100%; border: 1px solid var(--border-color); border-radius: 4px;">
+                    </div>
+
+                    <div id="matriz_fijo" style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Bloques Horarios (Solo Fijo)</h4>
+                        
+                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 8px;">
+                            <strong>Día</strong>
+                            <strong>Hora Entrada</strong>
+                            <strong>Hora Salida</strong>
+                        </div>
+                        
+                        <!-- Lunes a Viernes de ejemplo -->
+                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 5px;">
+                            <span>Lunes</span>
+                            <input type="time" value="08:00">
+                            <input type="time" value="15:00">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 5px;">
+                            <span>Martes</span>
+                            <input type="time" value="08:00">
+                            <input type="time" value="15:00">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 5px;">
+                            <span>Miércoles</span>
+                            <input type="time" value="08:00">
+                            <input type="time" value="15:00">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 5px;">
+                            <span>Jueves</span>
+                            <input type="time" value="08:00">
+                            <input type="time" value="15:00">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 5px;">
+                            <span>Viernes</span>
+                            <input type="time" value="08:00">
+                            <input type="time" value="15:00">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-btn" data-modal-close>Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/scripts.js"></script>
+</body>
+</html>

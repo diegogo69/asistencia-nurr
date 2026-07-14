@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Punto de Marcación - Asistencia NURR</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="kiosk-container">
+        <div class="kiosk-box">
+            <h1 style="color: var(--primary-color); margin-bottom: 10px;">Sistema de Asistencia</h1>
+            <p style="color: var(--text-light); margin-bottom: 20px;">ULA-NURR</p>
+            
+            <div class="form-group" style="text-align: left;">
+                <label for="doc_marcacion">Ingrese su Documento de Identidad:</label>
+                <input type="text" id="doc_marcacion" placeholder="Ej: V-12345678" style="font-size: 18px; padding: 12px; text-align: center;">
+            </div>
+
+            <div class="camera-preview">
+                <span style="z-index: 10;">Cámara Facial Activada</span>
+                <div class="camera-guide"></div>
+            </div>
+
+            <div class="actions" style="justify-content: center; margin-top: 20px; gap: 15px;">
+                <button class="btn btn-primary" data-modal-target="modal-resultado">Simular Marcación Exitosa</button>
+                <button class="btn btn-secondary">Usar Escáner QR</button>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <a href="index.html" style="color: var(--text-light); text-decoration: none; font-size: 14px;">← Salir del modo Kiosco</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Resultado de Marcación -->
+    <div class="modal-overlay" id="modal-resultado">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Registro Exitoso</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <h2 style="color: var(--success-color); margin-bottom: 15px;">¡ENTRADA REGISTRADA!</h2>
+                <div style="text-align: left; background-color: var(--bg-color); padding: 15px; border-radius: 8px;">
+                    <p><strong>Usuario:</strong> Juan Pérez</p>
+                    <p><strong>Departamento:</strong> Soporte Técnico</p>
+                    <p><strong>Hora:</strong> 08:00 AM</p>
+                    <p><strong>Estado:</strong> Puntual</p>
+                    <p><strong>Método:</strong> Reconocimiento Facial</p>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn btn-primary close-btn" data-modal-close>Aceptar (Siguiente Usuario)</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/scripts.js"></script>
+</body>
+</html>

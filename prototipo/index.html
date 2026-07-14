@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Asistencia NURR</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2>Asistencia NURR</h2>
+        <nav>
+            <ul>
+                <li><a href="index.html" class="active">Inicio</a></li>
+                <li><a href="marcacion.html">Punto de Marcación</a></li>
+                <li><a href="login.html">Iniciar Sesión</a></li>
+                <li><a href="unidades.html">Unidades Organizacionales</a></li>
+                <li><a href="horarios.html">Gestión de Horarios</a></li>
+                <li><a href="redes.html">Rangos de Red</a></li>
+                <li><a href="usuarios.html">Gestión de Usuarios</a></li>
+                <li><a href="biometria.html">Registro Biométrico</a></li>
+                <li><a href="credencial.html">Credencial QR</a></li>
+                <li><a href="asistencias_incompletas.html">Asistencias Incompletas</a></li>
+                <li><a href="historial.html">Historial de Asistencia</a></li>
+                <li><a href="reportes.html">Reportes</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Bienvenido al Panel de Control</h1>
+            <div class="user-info">
+                <span>Administrador</span>
+                <a href="login.html" class="btn btn-secondary">Cerrar Sesión</a>
+            </div>
+        </header>
+
+        <section class="content-panel">
+            <h2>Prototipos de Interfaz de Usuario</h2>
+            <p>Seleccione una opción en el menú lateral para visualizar los diferentes prototipos de la aplicación de Asistencia ULA-NURR.</p>
+            
+            <div style="margin-top: 30px; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+                <!-- Cards for quick access -->
+                <div class="content-panel" style="border-top: 4px solid var(--primary-color);">
+                    <h3>Punto de Marcación</h3>
+                    <p style="color: var(--text-light); font-size: 14px; margin: 10px 0;">Interfaz modo kiosco para el registro de entrada/salida.</p>
+                    <a href="marcacion.html" class="btn btn-primary" style="width: 100%; text-align: center;">Ver Prototipo</a>
+                </div>
+
+                <div class="content-panel" style="border-top: 4px solid var(--primary-color);">
+                    <h3>Gestión de Usuarios</h3>
+                    <p style="color: var(--text-light); font-size: 14px; margin: 10px 0;">Administración de personal, roles y departamentos.</p>
+                    <a href="usuarios.html" class="btn btn-primary" style="width: 100%; text-align: center;">Ver Prototipo</a>
+                </div>
+
+                <div class="content-panel" style="border-top: 4px solid var(--primary-color);">
+                    <h3>Reportes</h3>
+                    <p style="color: var(--text-light); font-size: 14px; margin: 10px 0;">Generación de consolidados estadísticos de asistencia.</p>
+                    <a href="reportes.html" class="btn btn-primary" style="width: 100%; text-align: center;">Ver Prototipo</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/scripts.js"></script>
+</body>
+</html>

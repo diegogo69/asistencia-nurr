@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistencias Incompletas - Asistencia NURR</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Asistencia NURR</h2>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="asistencias_incompletas.html" class="active">Asistencias Incompletas</a></li>
+                <li><a href="historial.html">Historial de Asistencia</a></li>
+                <li><a href="reportes.html">Reportes</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Panel de Asistencias Incompletas</h1>
+        </header>
+
+        <section class="content-panel">
+            <p style="margin-bottom: 20px; color: var(--text-light);">Registros con marcación de entrada pero sin marcación de salida correspondientes a jornadas anteriores.</p>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
+                            <th>Departamento</th>
+                            <th>Hora Entrada</th>
+                            <th>Estado Actual</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>12-07-2026</td>
+                            <td>Pedro González</td>
+                            <td>Soporte Técnico</td>
+                            <td>08:15 AM</td>
+                            <td><span class="text-danger">Incompleto</span></td>
+                            <td class="actions">
+                                <button class="btn btn-primary btn-icon" data-modal-target="modal-resolver">Resolver Incidencia</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>13-07-2026</td>
+                            <td>Ana Silva</td>
+                            <td>Coordinación Académica</td>
+                            <td>07:55 AM</td>
+                            <td><span class="text-danger">Incompleto</span></td>
+                            <td class="actions">
+                                <button class="btn btn-primary btn-icon" data-modal-target="modal-resolver">Resolver Incidencia</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination">
+                <button disabled>Primero</button>
+                <button disabled>Anterior</button>
+                <span>Página 1 de 1</span>
+                <button disabled>Siguiente</button>
+                <button disabled>Último</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Resolver Incidencia -->
+    <div class="modal-overlay" id="modal-resolver">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Resolución de Inconsistencia</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form class="simulate-save">
+                <div class="modal-body">
+                    <div style="background-color: var(--bg-color); padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px;">
+                        <strong>Usuario:</strong> Pedro González<br>
+                        <strong>Fecha:</strong> 12-07-2026 | <strong>Entrada:</strong> 08:15 AM
+                    </div>
+
+                    <div class="form-group">
+                        <label>Imputar Hora de Salida</label>
+                        <input type="time" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Nuevo Estado de Cumplimiento</label>
+                        <select required>
+                            <option value="">Seleccione...</option>
+                            <option>Puntual</option>
+                            <option>Retraso</option>
+                            <option>Anticipada</option>
+                            <option>Abandono de jornada</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Observación / Justificación <span style="color:red">*</span></label>
+                        <textarea rows="4" placeholder="Indique la justificación para esta resolución manual..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-btn" data-modal-close>Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Resolución</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/scripts.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial - Asistencia NURR</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Asistencia NURR</h2>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="asistencias_incompletas.html">Asistencias Incompletas</a></li>
+                <li><a href="historial.html" class="active">Historial de Asistencia</a></li>
+                <li><a href="reportes.html">Reportes</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Consulta de Historial de Asistencia</h1>
+        </header>
+
+        <section class="content-panel">
+            <!-- Filtros Avanzados -->
+            <div style="background-color: var(--bg-color); padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                <h3 style="margin-bottom: 15px; font-size: 16px;">Filtros de Búsqueda</h3>
+                <form class="simulate-save" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Desde:</label>
+                        <input type="date">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Hasta:</label>
+                        <input type="date">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Departamento:</label>
+                        <select>
+                            <option value="">Todos</option>
+                            <option>Soporte Técnico</option>
+                            <option>Coordinación Académica</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Estado:</label>
+                        <select>
+                            <option value="">Todos</option>
+                            <option>Puntual</option>
+                            <option>Retraso</option>
+                            <option>Anticipada</option>
+                            <option>Incompleto</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="alert('Aplicando filtros a la consulta...')">Consultar</button>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Usuario</th>
+                            <th>Departamento</th>
+                            <th>Entrada</th>
+                            <th>Salida</th>
+                            <th>Método</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>12-07-2026</td>
+                            <td>Ana Silva</td>
+                            <td>Coordinación Académica</td>
+                            <td>07:55 AM</td>
+                            <td>04:05 PM</td>
+                            <td>Facial</td>
+                            <td><span class="text-success">Puntual</span></td>
+                        </tr>
+                        <tr>
+                            <td>12-07-2026</td>
+                            <td>Juan Pérez</td>
+                            <td>Soporte Técnico</td>
+                            <td>08:15 AM</td>
+                            <td>03:50 PM</td>
+                            <td>QR</td>
+                            <td><span style="color: #ff9800;">Retraso</span></td>
+                        </tr>
+                        <tr>
+                            <td>13-07-2026</td>
+                            <td>Pedro González</td>
+                            <td>Soporte Técnico</td>
+                            <td>08:00 AM</td>
+                            <td>-</td>
+                            <td>Facial</td>
+                            <td><span class="text-danger">Incompleto</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination">
+                <button disabled>Primero</button>
+                <button disabled>Anterior</button>
+                <span>Página 1 de 15</span>
+                <button>Siguiente</button>
+                <button>Último</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/scripts.js"></script>
+</body>
+</html>

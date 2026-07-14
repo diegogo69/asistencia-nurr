@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rangos de Red - Asistencia NURR</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <h2>Asistencia NURR</h2>
+        <nav>
+            <ul>
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="unidades.html">Unidades Organizacionales</a></li>
+                <li><a href="horarios.html">Gestión de Horarios</a></li>
+                <li><a href="redes.html" class="active">Rangos de Red</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>Gestión de Rangos de Red Autorizados</h1>
+        </header>
+
+        <section class="content-panel">
+            <p style="margin-bottom: 20px; color: var(--text-light);">Configure las direcciones IP desde las cuales se permite el registro de asistencia (Kioscos).</p>
+            
+            <div class="toolbar">
+                <button class="btn btn-primary" data-modal-target="modal-red">Agregar Red</button>
+                <div class="search-bar">
+                    <input type="text" placeholder="Buscar por IP o descripción...">
+                    <button class="btn btn-secondary">Buscar</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dirección IP / CIDR</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>192.168.1.100</td>
+                            <td>Kiosco Entrada Principal</td>
+                            <td><span class="text-success">Activo</span></td>
+                            <td class="actions">
+                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-red">Editar</button>
+                                <button class="btn btn-secondary btn-icon" onclick="alert('Estado cambiado')">Desactivar</button>
+                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Eliminar regla?')">Eliminar</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>192.168.2.0/24</td>
+                            <td>Red Laboratorios Piso 2</td>
+                            <td><span class="text-danger">Inactivo</span></td>
+                            <td class="actions">
+                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-red">Editar</button>
+                                <button class="btn btn-success btn-icon" onclick="alert('Estado cambiado')">Activar</button>
+                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Eliminar regla?')">Eliminar</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="pagination">
+                <button disabled>Primero</button>
+                <button disabled>Anterior</button>
+                <span>Página 1 de 1</span>
+                <button disabled>Siguiente</button>
+                <button disabled>Último</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Agregar/Editar Red -->
+    <div class="modal-overlay" id="modal-red">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Formulario de Regla de Red</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form class="simulate-save">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Dirección IP / CIDR</label>
+                        <input type="text" placeholder="Ej. 192.168.1.50 o 10.0.0.0/16" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea rows="3" placeholder="Ubicación o propósito de la regla..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-btn" data-modal-close>Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Regla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/scripts.js"></script>
+</body>
+</html>
