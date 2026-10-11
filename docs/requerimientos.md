@@ -35,7 +35,7 @@ Definen los atributos de calidad, restricciones tecnológicas y estándares de a
 
 ## Arquitectura y Entorno
 
-- **RNF-1.1 Despliegue en Red Local (LAN):** El software debe operar bajo una arquitectura cliente-servidor con una API centralizada, desplegada en el entorno de red local de la unidad, con un servidor central de base de datos y puntos de interconexión inalámbrica.
+- **RNF-1.1 Despliegue en Red Local (LAN):** El software debe operar bajo una arquitectura cliente-servidor con una API centralizada, compatible con sistemas operativos windows 10/11, desplegada en el entorno de red local de la unidad, un servidor central de base de datos.
 - **RNF-1.2 Independencia Lógica:** El código fuente no debe contener parámetros fijos; toda la lógica de negocio debe depender exclusivamente de las variables almacenadas en la base de datos, evitando el hardcoding.
 
 ## Seguridad e Integridad

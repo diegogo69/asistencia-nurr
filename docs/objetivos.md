@@ -26,7 +26,7 @@
 
 **Fase de Despliegue e Infraestructura**
 
-- Desplegar e integrar la plataforma en el entorno de red local de la unidad, estableciendo un nodo de servidor centralizado para la base de datos y habilitando puntos de acceso e interconexión inalámbrica para los usuarios autorizados.
+- Desplegar e integrar la plataforma en el entorno de red local de la unidad, ejecutado en un computador con sistema operativo windows 10/11, estableciendo un nodo de servidor centralizado para la base de datos y ejecución de la aplicación.
 
 **Fase de Pruebas y Validación**
 
