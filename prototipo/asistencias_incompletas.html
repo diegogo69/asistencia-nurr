@@ -12,6 +12,11 @@
         <nav>
             <ul>
                 <li><a href="index.html">Inicio</a></li>
+                <li><a href="marcacion.html">Punto de Marcación</a></li>
+                <li><a href="unidades.html">Unidades Organizacionales</a></li>
+                <li><a href="horarios.html">Gestión de Horarios</a></li>
+                <li><a href="redes.html">Rangos de Red</a></li>
+                <li><a href="usuarios.html">Gestión de Usuarios</a></li>
                 <li><a href="asistencias_incompletas.html" class="active">Asistencias Incompletas</a></li>
                 <li><a href="historial.html">Historial de Asistencia</a></li>
                 <li><a href="reportes.html">Reportes</a></li>
@@ -21,102 +26,232 @@
 
     <main class="main-content">
         <header class="top-bar">
-            <h1>Panel de Asistencias Incompletas</h1>
+            <h1>Auditoría de Asistencias Incompletas</h1>
+            <div class="user-info">
+                <span id="user-display">Administrador</span>
+                <button onclick="API.logout()" class="btn btn-secondary">Cerrar Sesión</button>
+            </div>
         </header>
 
         <section class="content-panel">
-            <p style="margin-bottom: 20px; color: var(--text-light);">Registros con marcación de entrada pero sin marcación de salida correspondientes a jornadas anteriores.</p>
-            
+            <p style="margin-bottom: 20px; color: var(--text-light);">
+                Registros con marcación de entrada pero sin marcación de salida correspondientes a jornadas anteriores. Requieren resolución e imputación justificada.
+            </p>
+
+            <div class="toolbar">
+                <button id="btn-run-detection" class="btn btn-secondary">🔍 Ejecutar Detección de Incompletas</button>
+                <div class="search-bar">
+                    <input type="date" id="filter-desde" title="Desde">
+                    <input type="date" id="filter-hasta" title="Hasta">
+                    <button id="btn-filter" class="btn btn-secondary">Filtrar</button>
+                </div>
+            </div>
+
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
                             <th>Fecha</th>
                             <th>Usuario</th>
+                            <th>Cédula</th>
                             <th>Departamento</th>
                             <th>Hora Entrada</th>
-                            <th>Estado Actual</th>
+                            <th>Días Pendiente</th>
+                            <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>12-07-2026</td>
-                            <td>Pedro González</td>
-                            <td>Soporte Técnico</td>
-                            <td>08:15 AM</td>
-                            <td><span class="text-danger">Incompleto</span></td>
-                            <td class="actions">
-                                <button class="btn btn-primary btn-icon" data-modal-target="modal-resolver">Resolver Incidencia</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>13-07-2026</td>
-                            <td>Ana Silva</td>
-                            <td>Coordinación Académica</td>
-                            <td>07:55 AM</td>
-                            <td><span class="text-danger">Incompleto</span></td>
-                            <td class="actions">
-                                <button class="btn btn-primary btn-icon" data-modal-target="modal-resolver">Resolver Incidencia</button>
-                            </td>
-                        </tr>
+                    <tbody id="incompletas-tbody">
+                        <tr><td colspan="8" style="text-align: center;">Cargando asistencias incompletas...</td></tr>
                     </tbody>
                 </table>
             </div>
             
             <div class="pagination">
-                <button disabled>Primero</button>
-                <button disabled>Anterior</button>
-                <span>Página 1 de 1</span>
-                <button disabled>Siguiente</button>
-                <button disabled>Último</button>
+                <button id="pg-first">Primero</button>
+                <button id="pg-prev">Anterior</button>
+                <span id="pg-info">Página 1 de 1</span>
+                <button id="pg-next">Siguiente</button>
+                <button id="pg-last">Último</button>
             </div>
         </section>
     </main>
 
     <!-- Modal Resolver Incidencia -->
     <div class="modal-overlay" id="modal-resolver">
-        <div class="modal">
+        <div class="modal" style="max-width: 550px;">
             <div class="modal-header">
-                <h3>Resolución de Inconsistencia</h3>
-                <button class="close-btn">&times;</button>
+                <h3>Resolución Manual de Asistencia Incompleta</h3>
+                <button class="close-btn" data-modal-close>&times;</button>
             </div>
-            <form class="simulate-save">
+            <form id="form-resolver">
+                <input type="hidden" id="resolve-asistencia-id">
                 <div class="modal-body">
-                    <div style="background-color: var(--bg-color); padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 14px;">
-                        <strong>Usuario:</strong> Pedro González<br>
-                        <strong>Fecha:</strong> 12-07-2026 | <strong>Entrada:</strong> 08:15 AM
+                    <div style="background-color: var(--bg-color); padding: 12px 16px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; border: 1px solid var(--border-color);">
+                        <strong>Usuario:</strong> <span id="res-usuario">-</span> (<span id="res-cedula">-</span>)<br>
+                        <strong>Fecha:</strong> <span id="res-fecha">-</span> | <strong>Entrada:</strong> <span id="res-entrada">-</span>
                     </div>
 
                     <div class="form-group">
-                        <label>Imputar Hora de Salida</label>
-                        <input type="time" required>
+                        <label for="hora_salida">Imputar Hora de Salida <span style="color:red">*</span></label>
+                        <input type="time" id="hora_salida" required value="15:00">
                     </div>
                     
                     <div class="form-group">
-                        <label>Nuevo Estado de Cumplimiento</label>
-                        <select required>
-                            <option value="">Seleccione...</option>
-                            <option>Puntual</option>
-                            <option>Retraso</option>
-                            <option>Anticipada</option>
-                            <option>Abandono de jornada</option>
+                        <label for="nuevo_estado">Nuevo Estado de Cumplimiento <span style="color:red">*</span></label>
+                        <select id="nuevo_estado" required>
+                            <option value="Puntual">Puntual (Jornada completada según horario)</option>
+                            <option value="Retraso">Retraso</option>
+                            <option value="Anticipada">Salida Anticipada autorizada</option>
+                            <option value="Abandono de jornada">Abandono de jornada</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label>Observación / Justificación <span style="color:red">*</span></label>
-                        <textarea rows="4" placeholder="Indique la justificación para esta resolución manual..." required></textarea>
+                        <label for="observacion">Observación / Justificación de Auditoría <span style="color:red">*</span></label>
+                        <textarea id="observacion" rows="4" placeholder="Indique la justificación formal, permiso o causa para esta resolución manual..." required minlength="5"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary close-btn" data-modal-close>Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Resolución</button>
+                    <button type="submit" id="btn-save-resolve" class="btn btn-primary">Guardar Resolución</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <script src="js/api.js"></script>
     <script src="js/scripts.js"></script>
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+
+        async function loadIncompletas(page = 1) {
+            const desde = document.getElementById('filter-desde').value;
+            const hasta = document.getElementById('filter-hasta').value;
+            const tbody = document.getElementById('incompletas-tbody');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Cargando...</td></tr>';
+
+            try {
+                let url = `/auditoria/incompletas?page=${page}&limit=10`;
+                if (desde) url += `&fecha_desde=${encodeURIComponent(desde)}`;
+                if (hasta) url += `&fecha_hasta=${encodeURIComponent(hasta)}`;
+
+                const data = await API.request(url);
+                currentPage = data.page;
+                totalPages = data.pages || 1;
+
+                document.getElementById('pg-info').textContent = `Página ${currentPage} de ${totalPages}`;
+                document.getElementById('pg-first').disabled = currentPage <= 1;
+                document.getElementById('pg-prev').disabled = currentPage <= 1;
+                document.getElementById('pg-next').disabled = currentPage >= totalPages;
+                document.getElementById('pg-last').disabled = currentPage >= totalPages;
+
+                if (!data.items || data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-light);">No hay asistencias incompletas pendientes de resolución. ¡Al día!</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.items.map(item => `
+                    <tr>
+                        <td><strong>${escapeHtml(item.fecha)}</strong></td>
+                        <td>${escapeHtml(item.usuario_nombre)}</td>
+                        <td>${escapeHtml(item.documento_identidad)}</td>
+                        <td>${escapeHtml(item.departamento_nombre || '-')}</td>
+                        <td>${escapeHtml(item.hora_entrada ? item.hora_entrada.substring(0, 5) : '-')}</td>
+                        <td><span style="color:#d32f2f; font-weight:bold;">${item.dias_pendiente} día(s)</span></td>
+                        <td><span class="badge" style="background-color:#ffebee; color:#c62828; padding:3px 6px; border-radius:4px; font-weight:600;">${escapeHtml(item.estado_actual)}</span></td>
+                        <td class="actions">
+                            <button class="btn btn-primary btn-icon" onclick='openResolveModal(${JSON.stringify(item).replace(/'/g, "&apos;")})'>Resolver</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red;">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function openResolveModal(item) {
+            document.getElementById('resolve-asistencia-id').value = item.asistencia_id;
+            document.getElementById('res-usuario').textContent = item.usuario_nombre;
+            document.getElementById('res-cedula').textContent = item.documento_identidad;
+            document.getElementById('res-fecha').textContent = item.fecha;
+            document.getElementById('res-entrada').textContent = item.hora_entrada ? item.hora_entrada.substring(0, 5) : '-';
+            document.getElementById('hora_salida').value = '15:00';
+            document.getElementById('nuevo_estado').value = 'Puntual';
+            document.getElementById('observacion').value = '';
+            document.getElementById('modal-resolver').style.display = 'flex';
+        }
+
+        async function runDetection() {
+            const btn = document.getElementById('btn-run-detection');
+            btn.disabled = true;
+            btn.textContent = 'Analizando asistencias...';
+
+            try {
+                const res = await API.request('/auditoria/ejecutar-deteccion', { method: 'POST' });
+                API.showToast(res.message || `Detección completada: ${res.detected_count} registro(s) detectado(s).`, 'success');
+                loadIncompletas(1);
+            } catch (err) {
+                API.showToast(`Error ejecutando detección: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔍 Ejecutar Detección de Incompletas';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = API.getUser();
+            if (user) {
+                document.getElementById('user-display').textContent = `${user.nombres} (${user.rol})`;
+            }
+
+            document.getElementById('btn-run-detection').addEventListener('click', runDetection);
+            document.getElementById('btn-filter').addEventListener('click', () => loadIncompletas(1));
+
+            document.getElementById('pg-first').addEventListener('click', () => loadIncompletas(1));
+            document.getElementById('pg-prev').addEventListener('click', () => { if (currentPage > 1) loadIncompletas(currentPage - 1); });
+            document.getElementById('pg-next').addEventListener('click', () => { if (currentPage < totalPages) loadIncompletas(currentPage + 1); });
+            document.getElementById('pg-last').addEventListener('click', () => loadIncompletas(totalPages));
+
+            document.getElementById('form-resolver').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const asistencia_id = parseInt(document.getElementById('resolve-asistencia-id').value);
+                const hora_salida = document.getElementById('hora_salida').value;
+                const nuevo_estado = document.getElementById('nuevo_estado').value;
+                const observacion = document.getElementById('observacion').value.trim();
+
+                if (observacion.length < 5) {
+                    API.showToast('La justificación debe tener al menos 5 caracteres.', 'warning');
+                    return;
+                }
+
+                try {
+                    await API.request('/auditoria/resolver', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            asistencia_id,
+                            hora_salida,
+                            nuevo_estado,
+                            observacion
+                        })
+                    });
+
+                    API.showToast('Asistencia incompleta resuelta e imputada con éxito.', 'success');
+                    document.getElementById('modal-resolver').style.display = 'none';
+                    loadIncompletas(currentPage);
+                } catch (err) {
+                    // Handled
+                }
+            });
+
+            loadIncompletas(1);
+        });
+    </script>
 </body>
 </html>

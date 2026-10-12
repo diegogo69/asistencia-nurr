@@ -12,9 +12,14 @@
         <nav>
             <ul>
                 <li><a href="index.html">Inicio</a></li>
+                <li><a href="marcacion.html">Punto de Marcación</a></li>
                 <li><a href="unidades.html" class="active">Unidades Organizacionales</a></li>
                 <li><a href="horarios.html">Gestión de Horarios</a></li>
                 <li><a href="redes.html">Rangos de Red</a></li>
+                <li><a href="usuarios.html">Gestión de Usuarios</a></li>
+                <li><a href="asistencias_incompletas.html">Asistencias Incompletas</a></li>
+                <li><a href="historial.html">Historial de Asistencia</a></li>
+                <li><a href="reportes.html">Reportes</a></li>
             </ul>
         </nav>
     </aside>
@@ -22,14 +27,18 @@
     <main class="main-content">
         <header class="top-bar">
             <h1>Gestión de Unidades Organizacionales</h1>
+            <div class="user-info">
+                <span id="user-display">Administrador</span>
+                <button onclick="API.logout()" class="btn btn-secondary">Cerrar Sesión</button>
+            </div>
         </header>
 
         <section class="content-panel">
             <div class="toolbar">
-                <button class="btn btn-primary" data-modal-target="modal-unidad">Agregar Unidad</button>
+                <button id="btn-add-unit" class="btn btn-primary">Agregar Unidad</button>
                 <div class="search-bar">
-                    <input type="text" placeholder="Filtrar por nombre o tipo...">
-                    <button class="btn btn-secondary">Buscar</button>
+                    <input type="text" id="filter-input" placeholder="Filtrar por nombre...">
+                    <button id="btn-search" class="btn btn-secondary">Buscar</button>
                 </div>
             </div>
 
@@ -39,80 +48,195 @@
                         <tr>
                             <th>Nombre de Unidad</th>
                             <th>Tipo de Unidad</th>
+                            <th>Usuarios Vinculados</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>Soporte Técnico</td>
-                            <td>Sección</td>
-                            <td class="actions">
-                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-unidad">Editar</button>
-                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Seguro que desea eliminar esta unidad?')">Eliminar</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Coordinación Académica</td>
-                            <td>Coordinación</td>
-                            <td class="actions">
-                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-unidad">Editar</button>
-                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Seguro que desea eliminar esta unidad?')">Eliminar</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Recursos Humanos</td>
-                            <td>Oficina</td>
-                            <td class="actions">
-                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-unidad">Editar</button>
-                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Seguro que desea eliminar esta unidad?')">Eliminar</button>
-                            </td>
-                        </tr>
+                    <tbody id="units-tbody">
+                        <tr><td colspan="4" style="text-align: center;">Cargando unidades...</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="pagination">
-                <button disabled>Primero</button>
-                <button disabled>Anterior</button>
-                <span>Página 1 de 1</span>
-                <button disabled>Siguiente</button>
-                <button disabled>Último</button>
+                <button id="pg-first">Primero</button>
+                <button id="pg-prev">Anterior</button>
+                <span id="pg-info">Página 1 de 1</span>
+                <button id="pg-next">Siguiente</button>
+                <button id="pg-last">Último</button>
             </div>
         </section>
     </main>
 
-    <!-- Modal Agregar/Editar Unidad -->
+    <!-- Modal Formulario de Unidad -->
     <div class="modal-overlay" id="modal-unidad">
         <div class="modal">
             <div class="modal-header">
-                <h3>Formulario de Unidad Organizacional</h3>
-                <button class="close-btn">&times;</button>
+                <h3 id="modal-title">Agregar Unidad Organizacional</h3>
+                <button class="close-btn" data-modal-close>&times;</button>
             </div>
-            <form class="simulate-save">
+            <form id="form-unidad">
+                <input type="hidden" id="edit-id">
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="nombre_unidad">Nombre de la Unidad</label>
-                        <input type="text" id="nombre_unidad" required>
+                        <input type="text" id="nombre_unidad" required placeholder="Ej: Soporte Técnico">
                     </div>
                     <div class="form-group">
                         <label for="tipo_unidad">Tipo de Unidad</label>
                         <select id="tipo_unidad" required>
                             <option value="">Seleccione...</option>
-                            <option value="direccion">Dirección</option>
-                            <option value="coordinacion">Coordinación</option>
-                            <option value="seccion">Sección</option>
+                            <option value="dirección">Dirección</option>
+                            <option value="coordinación">Coordinación</option>
+                            <option value="sección">Sección</option>
                             <option value="oficina">Oficina</option>
                         </select>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary close-btn" data-modal-close>Cerrar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="submit" id="btn-save-unit" class="btn btn-primary">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <script src="js/api.js"></script>
     <script src="js/scripts.js"></script>
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+
+        async function loadUnits(page = 1) {
+            const q = document.getElementById('filter-input').value.trim();
+            const tbody = document.getElementById('units-tbody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Cargando...</td></tr>';
+
+            try {
+                let url = `/departamentos?page=${page}&limit=10`;
+                if (q) url += `&q=${encodeURIComponent(q)}`;
+
+                const data = await API.request(url);
+                currentPage = data.page;
+                totalPages = data.total_pages;
+
+                document.getElementById('pg-info').textContent = `Página ${data.page} de ${data.total_pages || 1} (Total: ${data.total})`;
+                document.getElementById('pg-first').disabled = (currentPage <= 1);
+                document.getElementById('pg-prev').disabled = (currentPage <= 1);
+                document.getElementById('pg-next').disabled = (currentPage >= totalPages);
+                document.getElementById('pg-last').disabled = (currentPage >= totalPages);
+
+                if (!data.items || data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-light);">No se encontraron unidades registradas.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                data.items.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${u.nombre}</strong></td>
+                        <td>${u.tipo.charAt(0).toUpperCase() + u.tipo.slice(1)}</td>
+                        <td>${u.total_usuarios} integrantes</td>
+                        <td class="actions">
+                            <button class="btn btn-secondary btn-icon" onclick="editUnit(${u.id}, '${escapeQuotes(u.nombre)}', '${u.tipo}')">Editar</button>
+                            <button class="btn btn-danger btn-icon" onclick="deleteUnit(${u.id}, '${escapeQuotes(u.nombre)}')">Eliminar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--danger-color);">Error al cargar: ${err.message}</td></tr>`;
+            }
+        }
+
+        function escapeQuotes(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        function openModal() {
+            document.getElementById('modal-unidad').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-unidad').style.display = 'none';
+        }
+
+        document.getElementById('btn-add-unit').addEventListener('click', () => {
+            document.getElementById('modal-title').textContent = 'Agregar Unidad Organizacional';
+            document.getElementById('edit-id').value = '';
+            document.getElementById('nombre_unidad').value = '';
+            document.getElementById('tipo_unidad').value = '';
+            openModal();
+        });
+
+        window.editUnit = (id, nombre, tipo) => {
+            document.getElementById('modal-title').textContent = 'Editar Unidad Organizacional';
+            document.getElementById('edit-id').value = id;
+            document.getElementById('nombre_unidad').value = nombre;
+            document.getElementById('tipo_unidad').value = tipo;
+            openModal();
+        };
+
+        window.deleteUnit = async (id, nombre) => {
+            if (!confirm(`¿Está seguro de eliminar la unidad '${nombre}'?`)) return;
+            try {
+                await API.request(`/departamentos/${id}`, { method: 'DELETE' });
+                API.showToast(`Unidad '${nombre}' eliminada.`, 'success');
+                loadUnits(currentPage);
+            } catch (err) {}
+        };
+
+        document.getElementById('form-unidad').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const nombre = document.getElementById('nombre_unidad').value.trim();
+            const tipo = document.getElementById('tipo_unidad').value;
+            const btn = document.getElementById('btn-save-unit');
+
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+
+            try {
+                if (id) {
+                    await API.request(`/departamentos/${id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({ nombre, tipo })
+                    });
+                    API.showToast('Unidad actualizada exitosamente.', 'success');
+                } else {
+                    await API.request('/departamentos', {
+                        method: 'POST',
+                        body: JSON.stringify({ nombre, tipo })
+                    });
+                    API.showToast('Unidad creada exitosamente.', 'success');
+                }
+                closeModal();
+                loadUnits(currentPage);
+            } catch (err) {
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Guardar';
+            }
+        });
+
+        // Paginación y búsqueda
+        document.getElementById('btn-search').addEventListener('click', () => loadUnits(1));
+        document.getElementById('filter-input').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') loadUnits(1);
+        });
+        document.getElementById('pg-first').addEventListener('click', () => loadUnits(1));
+        document.getElementById('pg-prev').addEventListener('click', () => { if (currentPage > 1) loadUnits(currentPage - 1); });
+        document.getElementById('pg-next').addEventListener('click', () => { if (currentPage < totalPages) loadUnits(currentPage + 1); });
+        document.getElementById('pg-last').addEventListener('click', () => loadUnits(totalPages));
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = API.getUser();
+            if (user) {
+                document.getElementById('user-display').textContent = `${user.nombre_completo} (${user.rol})`;
+            }
+            loadUnits(1);
+        });
+    </script>
 </body>
 </html>

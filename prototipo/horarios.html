@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horarios - Asistencia NURR</title>
+    <title>Gestión de Horarios - Asistencia NURR</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -12,24 +12,37 @@
         <nav>
             <ul>
                 <li><a href="index.html">Inicio</a></li>
+                <li><a href="marcacion.html">Punto de Marcación</a></li>
                 <li><a href="unidades.html">Unidades Organizacionales</a></li>
                 <li><a href="horarios.html" class="active">Gestión de Horarios</a></li>
                 <li><a href="redes.html">Rangos de Red</a></li>
+                <li><a href="usuarios.html">Gestión de Usuarios</a></li>
+                <li><a href="asistencias_incompletas.html">Asistencias Incompletas</a></li>
+                <li><a href="historial.html">Historial de Asistencia</a></li>
+                <li><a href="reportes.html">Reportes</a></li>
             </ul>
         </nav>
     </aside>
 
     <main class="main-content">
         <header class="top-bar">
-            <h1>Gestión de Horarios</h1>
+            <h1>Gestión de Plantillas de Horarios</h1>
+            <div class="user-info">
+                <span id="user-display">Administrador</span>
+                <button onclick="API.logout()" class="btn btn-secondary">Cerrar Sesión</button>
+            </div>
         </header>
 
         <section class="content-panel">
+            <p style="margin-bottom: 20px; color: var(--text-light);">
+                Configure turnos de trabajo fijos con bloques de entrada/salida diarios o esquemas flexibles basados en horas semanales acumuladas.
+            </p>
+
             <div class="toolbar">
-                <button class="btn btn-primary" data-modal-target="modal-horario">Agregar Plantilla</button>
+                <button id="btn-add-horario" class="btn btn-primary">Agregar Plantilla</button>
                 <div class="search-bar">
-                    <input type="text" placeholder="Buscar por nombre o tipo...">
-                    <button class="btn btn-secondary">Buscar</button>
+                    <input type="text" id="filter-input" placeholder="Buscar por nombre o tipo...">
+                    <button id="btn-search" class="btn btn-secondary">Buscar</button>
                 </div>
             </div>
 
@@ -40,115 +53,300 @@
                             <th>Nombre de Plantilla</th>
                             <th>Tipo</th>
                             <th>Horas Semanales</th>
+                            <th>Bloques / Días</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>Turno Administrativo Mañana</td>
-                            <td>Fijo</td>
-                            <td>35</td>
-                            <td class="actions">
-                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-horario">Editar</button>
-                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Eliminar plantilla?')">Eliminar</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Pasantes Medio Tiempo</td>
-                            <td>Flexible</td>
-                            <td>20</td>
-                            <td class="actions">
-                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-horario">Editar</button>
-                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Eliminar plantilla?')">Eliminar</button>
-                            </td>
-                        </tr>
+                    <tbody id="horarios-tbody">
+                        <tr><td colspan="5" style="text-align: center;">Cargando plantillas de horarios...</td></tr>
                     </tbody>
                 </table>
             </div>
             
             <div class="pagination">
-                <button disabled>Primero</button>
-                <button disabled>Anterior</button>
-                <span>Página 1 de 1</span>
-                <button disabled>Siguiente</button>
-                <button disabled>Último</button>
+                <button id="pg-first">Primero</button>
+                <button id="pg-prev">Anterior</button>
+                <span id="pg-info">Página 1 de 1</span>
+                <button id="pg-next">Siguiente</button>
+                <button id="pg-last">Último</button>
             </div>
         </section>
     </main>
 
     <!-- Modal Agregar/Editar Horario -->
     <div class="modal-overlay" id="modal-horario">
-        <div class="modal large">
+        <div class="modal large" style="max-width: 700px;">
             <div class="modal-header">
-                <h3>Formulario de Plantilla de Horarios</h3>
-                <button class="close-btn">&times;</button>
+                <h3 id="modal-title">Plantilla de Horario</h3>
+                <button class="close-btn" data-modal-close>&times;</button>
             </div>
-            <form class="simulate-save">
+            <form id="form-horario">
+                <input type="hidden" id="edit-id">
                 <div class="modal-body">
                     <div class="grid-2">
                         <div class="form-group">
-                            <label>Nombre de Plantilla</label>
-                            <input type="text" required>
+                            <label for="nombre_horario">Nombre de Plantilla <span style="color:red">*</span></label>
+                            <input type="text" id="nombre_horario" placeholder="Ej. Turno Administrativo Regular" required>
                         </div>
                         <div class="form-group">
-                            <label>Tipo</label>
-                            <select id="tipo_horario" onchange="document.getElementById('matriz_fijo').style.display = this.value === 'fijo' ? 'block' : 'none'; document.getElementById('horas_flexibles').disabled = this.value === 'fijo';">
-                                <option value="fijo">Fijo</option>
-                                <option value="flexible">Flexible</option>
+                            <label for="tipo_horario">Tipo de Horario <span style="color:red">*</span></label>
+                            <select id="tipo_horario" required>
+                                <option value="fijo">Fijo (Bloques de Entrada / Salida)</option>
+                                <option value="flexible">Flexible (Bolsa de Horas Semanales)</option>
                             </select>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label>Horas Requeridas Semanales</label>
-                        <input type="number" id="horas_flexibles" value="35" disabled style="padding: 8px; width: 100%; border: 1px solid var(--border-color); border-radius: 4px;">
+                        <label for="horas_requeridas">Horas Requeridas Semanales <span style="color:red">*</span></label>
+                        <input type="number" id="horas_requeridas" step="0.5" min="1" max="60" value="35" required>
                     </div>
 
                     <div id="matriz_fijo" style="margin-top: 20px;">
-                        <h4 style="margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Bloques Horarios (Solo Fijo)</h4>
+                        <h4 style="margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Bloques Horarios Semanales (Lunes a Viernes)</h4>
                         
-                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 8px;">
-                            <strong>Día</strong>
-                            <strong>Hora Entrada</strong>
-                            <strong>Hora Salida</strong>
+                        <div style="display: grid; grid-template-columns: 80px 100px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 8px; font-weight: bold; font-size: 13px;">
+                            <span>Aplica</span>
+                            <span>Día</span>
+                            <span>Hora Entrada</span>
+                            <span>Hora Salida</span>
                         </div>
                         
-                        <!-- Lunes a Viernes de ejemplo -->
-                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 5px;">
-                            <span>Lunes</span>
-                            <input type="time" value="08:00">
-                            <input type="time" value="15:00">
-                        </div>
-                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 5px;">
-                            <span>Martes</span>
-                            <input type="time" value="08:00">
-                            <input type="time" value="15:00">
-                        </div>
-                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 5px;">
-                            <span>Miércoles</span>
-                            <input type="time" value="08:00">
-                            <input type="time" value="15:00">
-                        </div>
-                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 5px;">
-                            <span>Jueves</span>
-                            <input type="time" value="08:00">
-                            <input type="time" value="15:00">
-                        </div>
-                        <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 5px;">
-                            <span>Viernes</span>
-                            <input type="time" value="08:00">
-                            <input type="time" value="15:00">
+                        <div id="bloques-dias-container">
+                            <!-- Inyectado dinámicamente -->
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary close-btn" data-modal-close>Cerrar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="submit" id="btn-save-horario" class="btn btn-primary">Guardar Plantilla</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <script src="js/api.js"></script>
     <script src="js/scripts.js"></script>
+    <script>
+        const DIAS = [
+            { id: 0, nombre: 'Lunes' },
+            { id: 1, nombre: 'Martes' },
+            { id: 2, nombre: 'Miércoles' },
+            { id: 3, nombre: 'Jueves' },
+            { id: 4, nombre: 'Viernes' },
+            { id: 5, nombre: 'Sábado' }
+        ];
+
+        let currentPage = 1;
+        let totalPages = 1;
+
+        function renderBloquesInputs(bloques = []) {
+            const container = document.getElementById('bloques-dias-container');
+            container.innerHTML = DIAS.map(d => {
+                const b = bloques.find(item => item.dia_semana === d.id);
+                const activo = !!b || (d.id < 5 && bloques.length === 0);
+                const entrada = b ? b.hora_entrada : '08:00';
+                const salida = b ? b.hora_salida : '15:00';
+
+                return `
+                    <div style="display: grid; grid-template-columns: 80px 100px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 8px;">
+                        <div>
+                            <input type="checkbox" id="chk_dia_${d.id}" ${activo ? 'checked' : ''} onchange="toggleDia(${d.id})">
+                        </div>
+                        <span>${d.nombre}</span>
+                        <input type="time" id="entrada_dia_${d.id}" value="${entrada}" ${activo ? '' : 'disabled'}>
+                        <input type="time" id="salida_dia_${d.id}" value="${salida}" ${activo ? '' : 'disabled'}>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleDia(diaId) {
+            const chk = document.getElementById(`chk_dia_${diaId}`);
+            document.getElementById(`entrada_dia_${diaId}`).disabled = !chk.checked;
+            document.getElementById(`salida_dia_${diaId}`).disabled = !chk.checked;
+        }
+
+        async function loadHorarios(page = 1) {
+            const q = document.getElementById('filter-input').value.trim();
+            const tbody = document.getElementById('horarios-tbody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Cargando...</td></tr>';
+
+            try {
+                let url = `/horarios?page=${page}&limit=10`;
+                if (q) url += `&q=${encodeURIComponent(q)}`;
+
+                const data = await API.request(url);
+                currentPage = data.page;
+                totalPages = data.pages || 1;
+
+                document.getElementById('pg-info').textContent = `Página ${currentPage} de ${totalPages}`;
+                document.getElementById('pg-first').disabled = currentPage <= 1;
+                document.getElementById('pg-prev').disabled = currentPage <= 1;
+                document.getElementById('pg-next').disabled = currentPage >= totalPages;
+                document.getElementById('pg-last').disabled = currentPage >= totalPages;
+
+                if (!data.items || data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-light);">No se encontraron plantillas de horario.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.items.map(h => {
+                    let descBloques = '-';
+                    if (h.tipo === 'fijo' && h.bloques_fijos) {
+                        descBloques = h.bloques_fijos.map(b => {
+                            const diaNombre = DIAS.find(d => d.id === b.dia_semana)?.nombre || `Día ${b.dia_semana}`;
+                            return `${diaNombre}: ${b.hora_entrada.substring(0,5)}-${b.hora_salida.substring(0,5)}`;
+                        }).join(' | ');
+                    } else if (h.tipo === 'flexible') {
+                        descBloques = 'Cumplimiento libre de horas semanales';
+                    }
+
+                    return `
+                        <tr>
+                            <td><strong>${escapeHtml(h.nombre)}</strong></td>
+                            <td>
+                                <span class="badge" style="background-color: ${h.tipo === 'fijo' ? '#e3f2fd' : '#e8f5e9'}; color: ${h.tipo === 'fijo' ? '#0d47a1' : '#1b5e20'}; padding: 4px 8px; border-radius: 4px; font-weight: 600;">
+                                    ${h.tipo.toUpperCase()}
+                                </span>
+                            </td>
+                            <td>${h.horas_requeridas_semana} hrs/sem</td>
+                            <td style="font-size: 13px; color: var(--text-light); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(descBloques)}">
+                                ${escapeHtml(descBloques)}
+                            </td>
+                            <td class="actions">
+                                <button class="btn btn-secondary btn-icon" onclick='openEditModal(${JSON.stringify(h).replace(/'/g, "&apos;")})'>Editar</button>
+                                <button class="btn btn-danger btn-icon" onclick="deleteHorario(${h.id})">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function openAddModal() {
+            document.getElementById('modal-title').textContent = 'Agregar Plantilla de Horario';
+            document.getElementById('edit-id').value = '';
+            document.getElementById('nombre_horario').value = '';
+            document.getElementById('tipo_horario').value = 'fijo';
+            document.getElementById('horas_requeridas').value = '35';
+            document.getElementById('matriz_fijo').style.display = 'block';
+            renderBloquesInputs([]);
+            document.getElementById('modal-horario').style.display = 'flex';
+        }
+
+        function openEditModal(h) {
+            document.getElementById('modal-title').textContent = 'Editar Plantilla de Horario';
+            document.getElementById('edit-id').value = h.id;
+            document.getElementById('nombre_horario').value = h.nombre;
+            document.getElementById('tipo_horario').value = h.tipo;
+            document.getElementById('horas_requeridas').value = h.horas_requeridas_semana;
+            document.getElementById('matriz_fijo').style.display = h.tipo === 'fijo' ? 'block' : 'none';
+            renderBloquesInputs(h.bloques_fijos || []);
+            document.getElementById('modal-horario').style.display = 'flex';
+        }
+
+        async function deleteHorario(id) {
+            if (!confirm('¿Está seguro de eliminar esta plantilla de horarios? No debe tener usuarios asociados.')) {
+                return;
+            }
+            try {
+                await API.request(`/horarios/${id}`, { method: 'DELETE' });
+                API.showToast('Plantilla de horario eliminada.', 'success');
+                loadHorarios(currentPage);
+            } catch (err) {
+                // error handled
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = API.getUser();
+            if (user) {
+                document.getElementById('user-display').textContent = `${user.nombres} (${user.rol})`;
+            }
+
+            document.getElementById('tipo_horario').addEventListener('change', function() {
+                document.getElementById('matriz_fijo').style.display = this.value === 'fijo' ? 'block' : 'none';
+            });
+
+            document.getElementById('btn-add-horario').addEventListener('click', openAddModal);
+            document.getElementById('btn-search').addEventListener('click', () => loadHorarios(1));
+            document.getElementById('filter-input').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') loadHorarios(1);
+            });
+
+            document.getElementById('pg-first').addEventListener('click', () => loadHorarios(1));
+            document.getElementById('pg-prev').addEventListener('click', () => { if (currentPage > 1) loadHorarios(currentPage - 1); });
+            document.getElementById('pg-next').addEventListener('click', () => { if (currentPage < totalPages) loadHorarios(currentPage + 1); });
+            document.getElementById('pg-last').addEventListener('click', () => loadHorarios(totalPages));
+
+            document.getElementById('form-horario').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const editId = document.getElementById('edit-id').value;
+                const nombre = document.getElementById('nombre_horario').value.trim();
+                const tipo = document.getElementById('tipo_horario').value;
+                const horas_requeridas_semana = parseFloat(document.getElementById('horas_requeridas').value);
+
+                const bloques_fijos = [];
+                if (tipo === 'fijo') {
+                    DIAS.forEach(d => {
+                        const chk = document.getElementById(`chk_dia_${d.id}`);
+                        if (chk && chk.checked) {
+                            const entrada = document.getElementById(`entrada_dia_${d.id}`).value;
+                            const salida = document.getElementById(`salida_dia_${d.id}`).value;
+                            if (entrada && salida) {
+                                bloques_fijos.push({
+                                    dia_semana: d.id,
+                                    hora_entrada: entrada,
+                                    hora_salida: salida
+                                });
+                            }
+                        }
+                    });
+
+                    if (bloques_fijos.length === 0) {
+                        API.showToast('Debe seleccionar al menos un día con horario de entrada y salida para turnos fijos.', 'warning');
+                        return;
+                    }
+                }
+
+                const payload = {
+                    nombre,
+                    tipo,
+                    horas_requeridas_semana,
+                    bloques_fijos
+                };
+
+                try {
+                    if (editId) {
+                        await API.request(`/horarios/${editId}`, {
+                            method: 'PUT',
+                            body: JSON.stringify(payload)
+                        });
+                        API.showToast('Plantilla de horario actualizada con éxito.', 'success');
+                    } else {
+                        await API.request('/horarios', {
+                            method: 'POST',
+                            body: JSON.stringify(payload)
+                        });
+                        API.showToast('Plantilla de horario creada con éxito.', 'success');
+                    }
+                    document.getElementById('modal-horario').style.display = 'none';
+                    loadHorarios(currentPage);
+                } catch (err) {
+                    // Handled in API.request
+                }
+            });
+
+            loadHorarios(1);
+        });
+    </script>
 </body>
 </html>

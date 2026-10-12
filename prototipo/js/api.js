@@ -1,0 +1,187 @@
+// Cliente API para Asistencia-NURR
+const API_BASE = '/api/v1';
+
+const API = {
+    // Manejo de Tokens
+    getToken() {
+        return localStorage.getItem('asistencia_jwt_token');
+    },
+    setToken(token) {
+        localStorage.setItem('asistencia_jwt_token', token);
+    },
+    clearAuth() {
+        localStorage.removeItem('asistencia_jwt_token');
+        localStorage.removeItem('asistencia_user_profile');
+    },
+    getUser() {
+        const u = localStorage.getItem('asistencia_user_profile');
+        return u ? JSON.parse(u) : null;
+    },
+    setUser(user) {
+        localStorage.setItem('asistencia_user_profile', JSON.stringify(user));
+    },
+
+    // Notificaciones Toast
+    showToast(message, type = 'info') {
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.style.position = 'fixed';
+            toastContainer.style.top = '20px';
+            toastContainer.style.right = '20px';
+            toastContainer.style.zIndex = '9999';
+            toastContainer.style.display = 'flex';
+            toastContainer.style.flexDirection = 'column';
+            toastContainer.style.gap = '10px';
+            document.body.appendChild(toastContainer);
+        }
+
+        const toast = document.createElement('div');
+        const bgColors = {
+            success: '#2e7d32',
+            error: '#c62828',
+            warning: '#ef6c00',
+            info: '#0d47a1'
+        };
+        toast.style.backgroundColor = bgColors[type] || '#333';
+        toast.style.color = '#fff';
+        toast.style.padding = '12px 20px';
+        toast.style.borderRadius = '6px';
+        toast.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+        toast.style.fontSize = '14px';
+        toast.style.maxWidth = '350px';
+        toast.style.transition = 'opacity 0.3s ease';
+        toast.textContent = message;
+
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    },
+
+    // Petición HTTP autenticada
+    async request(endpoint, options = {}) {
+        const url = `${API_BASE}${endpoint}`;
+        const headers = options.headers || {};
+        const token = this.getToken();
+
+        if (token && !headers['Authorization']) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+            headers['Content-Type'] = 'application/json';
+        }
+
+        options.headers = headers;
+
+        try {
+            const response = await fetch(url, options);
+
+            if (response.status === 401) {
+                this.clearAuth();
+                if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('marcacion.html')) {
+                    window.location.href = 'login.html';
+                }
+                throw new Error('Sesión expirada o no autorizada.');
+            }
+
+            if (response.status === 403) {
+                const errData = await response.json().catch(() => ({}));
+                const msg = errData.detail || 'Acceso restringido.';
+                this.showToast(msg, 'error');
+                throw new Error(msg);
+            }
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                let msg = `Error en la solicitud (${response.status})`;
+                if (Array.isArray(errData.detail)) {
+                    msg = errData.detail.map(d => {
+                        const loc = d.loc ? d.loc.filter(l => l !== 'body').join('.') : '';
+                        return loc ? `${loc}: ${d.msg}` : d.msg;
+                    }).join(' | ');
+                } else if (typeof errData.detail === 'string') {
+                    msg = errData.detail;
+                }
+                this.showToast(msg, 'error');
+                throw new Error(msg);
+            }
+
+            // Descarga de archivos binarios
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/pdf') || contentType.includes('text/csv') || contentType.includes('image/')) {
+                return await response.blob();
+            }
+
+            return await response.json();
+        } catch (err) {
+            console.error('API Error:', err);
+            throw err;
+        }
+    },
+
+    // Métodos de Autenticación
+    async login(documento, password) {
+        const data = await this.request('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify({ documento_identidad: documento, password: password })
+        });
+        this.setToken(data.access_token);
+        this.setUser(data.user);
+        return data;
+    },
+
+    async logout() {
+        try {
+            await this.request('/auth/logout', { method: 'POST' });
+        } catch (_) {}
+        this.clearAuth();
+        window.location.href = 'login.html';
+    },
+
+    async getMe() {
+        return await this.request('/auth/me');
+    },
+
+    // Punto de Marcación Kiosco (No requiere JWT)
+    async verificarUsuarioMarcacion(documento) {
+        return await this.request('/marcacion/verificar-usuario', {
+            method: 'POST',
+            body: JSON.stringify({ documento_identidad: documento })
+        });
+    },
+
+    async registrarMarcacion(payload) {
+        return await this.request('/marcacion/registrar', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+    },
+    requireAuth() {
+        const token = this.getToken();
+        const currentPath = window.location.pathname;
+        if (!token && !currentPath.includes('login.html') && !currentPath.includes('marcacion.html')) {
+            window.location.href = 'login.html';
+            return false;
+        }
+        return true;
+    },
+
+    initUserDisplay() {
+        const u = this.getUser();
+        const el = document.getElementById('user-display');
+        if (el && u) {
+            const name = u.nombre_completo || `${u.nombres || u.nombre || ''} ${u.apellidos || u.apellido || ''}`.trim() || u.documento_identidad;
+            el.textContent = `${name} (${u.rol || 'Admin'})`;
+        }
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    API.requireAuth();
+    API.initUserDisplay();
+});
+
+window.API = API;

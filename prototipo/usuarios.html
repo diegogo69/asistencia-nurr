@@ -12,24 +12,37 @@
         <nav>
             <ul>
                 <li><a href="index.html">Inicio</a></li>
+                <li><a href="marcacion.html">Punto de Marcación</a></li>
+                <li><a href="unidades.html">Unidades Organizacionales</a></li>
+                <li><a href="horarios.html">Gestión de Horarios</a></li>
+                <li><a href="redes.html">Rangos de Red</a></li>
                 <li><a href="usuarios.html" class="active">Gestión de Usuarios</a></li>
-                <li><a href="biometria.html">Registro Biométrico</a></li>
-                <li><a href="credencial.html">Credencial QR</a></li>
+                <li><a href="asistencias_incompletas.html">Asistencias Incompletas</a></li>
+                <li><a href="historial.html">Historial de Asistencia</a></li>
+                <li><a href="reportes.html">Reportes</a></li>
             </ul>
         </nav>
     </aside>
 
     <main class="main-content">
         <header class="top-bar">
-            <h1>Gestión de Usuarios</h1>
+            <h1>Gestión de Usuarios y Personal</h1>
+            <div class="user-info">
+                <span id="user-display">Administrador</span>
+                <button onclick="API.logout()" class="btn btn-secondary">Cerrar Sesión</button>
+            </div>
         </header>
 
         <section class="content-panel">
+            <p style="margin-bottom: 20px; color: var(--text-light);">
+                Administre los expedientes del personal, asignación de horarios, unidades organizacionales y estados biométricos / QR.
+            </p>
+
             <div class="toolbar">
-                <button class="btn btn-primary" data-modal-target="modal-usuario">Agregar Usuario</button>
+                <button id="btn-add-usuario" class="btn btn-primary">Agregar Usuario</button>
                 <div class="search-bar">
-                    <input type="text" placeholder="Buscar por cédula, nombre, rol...">
-                    <button class="btn btn-secondary">Buscar</button>
+                    <input type="text" id="filter-input" placeholder="Buscar por cédula, nombre o correo...">
+                    <button id="btn-search" class="btn btn-secondary">Buscar</button>
                 </div>
             </div>
 
@@ -41,99 +54,89 @@
                             <th>Nombres y Apellidos</th>
                             <th>Rol</th>
                             <th>Departamento</th>
+                            <th>Horario</th>
+                            <th>Biometría / QR</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>V-12345678</td>
-                            <td>Juan Antonio Pérez</td>
-                            <td>Personal Administrativo</td>
-                            <td>Soporte Técnico</td>
-                            <td><span class="text-success">Activo</span></td>
-                            <td class="actions">
-                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-usuario">Editar</button>
-                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Desactivar usuario?')">Desactivar</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>V-98765432</td>
-                            <td>María Gabriela Rojas</td>
-                            <td>Administrador Sistema</td>
-                            <td>Coordinación Académica</td>
-                            <td><span class="text-success">Activo</span></td>
-                            <td class="actions">
-                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-usuario">Editar</button>
-                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Desactivar usuario?')">Desactivar</button>
-                            </td>
-                        </tr>
+                    <tbody id="usuarios-tbody">
+                        <tr><td colspan="8" style="text-align: center;">Cargando usuarios...</td></tr>
                     </tbody>
                 </table>
             </div>
             
             <div class="pagination">
-                <button disabled>Primero</button>
-                <button disabled>Anterior</button>
-                <span>Página 1 de 5</span>
-                <button>Siguiente</button>
-                <button>Último</button>
+                <button id="pg-first">Primero</button>
+                <button id="pg-prev">Anterior</button>
+                <span id="pg-info">Página 1 de 1</span>
+                <button id="pg-next">Siguiente</button>
+                <button id="pg-last">Último</button>
             </div>
         </section>
     </main>
 
     <!-- Modal Agregar/Editar Usuario -->
     <div class="modal-overlay" id="modal-usuario">
-        <div class="modal large">
+        <div class="modal large" style="max-width: 750px;">
             <div class="modal-header">
-                <h3>Formulario de Usuario</h3>
-                <button class="close-btn">&times;</button>
+                <h3 id="modal-title">Expediente de Usuario</h3>
+                <button class="close-btn" data-modal-close>&times;</button>
             </div>
-            <form class="simulate-save">
+            <form id="form-usuario">
+                <input type="hidden" id="edit-id">
                 <div class="modal-body">
                     <div class="grid-2">
                         <div class="form-group">
-                            <label>Documento de Identidad <span style="color:red">*</span></label>
-                            <input type="text" id="doc_identidad" required onblur="if(this.value==='V-12345678'){this.style.borderColor='red'; document.getElementById('error_doc').style.display='block'; document.getElementById('btn_guardar_usr').disabled=true;}else{this.style.borderColor=''; document.getElementById('error_doc').style.display='none'; document.getElementById('btn_guardar_usr').disabled=false;}">
-                            <small id="error_doc" style="color: var(--danger-color); display: none; margin-top: 5px;">El documento ingresado ya se encuentra registrado.</small>
+                            <label for="doc_identidad">Documento de Identidad <span style="color:red">*</span></label>
+                            <input type="text" id="doc_identidad" placeholder="Ej: V-12345678" required>
+                            <small id="error_doc" style="color: var(--danger-color); display: none; margin-top: 4px; font-weight: 500;"></small>
                         </div>
                         <div class="form-group">
-                            <label>Nombres</label>
-                            <input type="text" required>
+                            <label for="email">Correo Institucional / Personal</label>
+                            <input type="email" id="email" placeholder="usuario@ula.ve">
                         </div>
                         <div class="form-group">
-                            <label>Apellidos</label>
-                            <input type="text" required>
+                            <label for="nombres">Nombres <span style="color:red">*</span></label>
+                            <input type="text" id="nombres" required>
                         </div>
                         <div class="form-group">
-                            <label>Departamento / Unidad</label>
-                            <select required>
-                                <option value="">Seleccione...</option>
-                                <option>Soporte Técnico</option>
-                                <option>Coordinación Académica</option>
+                            <label for="apellidos">Apellidos <span style="color:red">*</span></label>
+                            <input type="text" id="apellidos" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="departamento_id">Departamento / Unidad <span style="color:red">*</span></label>
+                            <select id="departamento_id" required>
+                                <option value="">Seleccione Departamento...</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Plantilla de Horario</label>
-                            <select required>
-                                <option value="">Seleccione...</option>
-                                <option>Turno Administrativo Mañana</option>
-                                <option>Pasantes Medio Tiempo</option>
+                            <label for="horario_id">Plantilla de Horario <span style="color:red">*</span></label>
+                            <select id="horario_id" required>
+                                <option value="">Seleccione Horario...</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Rol del Sistema</label>
-                            <select id="rol_usuario" required onchange="document.getElementById('pwd_group').style.display = (this.value === 'admin' || this.value === 'supervisor') ? 'block' : 'none';">
-                                <option value="empleado">Empleado Regular (Solo marcación)</option>
-                                <option value="supervisor">Supervisor de Unidad</option>
-                                <option value="admin">Administrador del Sistema</option>
+                            <label for="rol_id">Rol en el Sistema <span style="color:red">*</span></label>
+                            <select id="rol_id" required>
+                                <option value="1">Administrador del Sistema</option>
+                                <option value="2">Supervisor de Unidad</option>
+                                <option value="3" selected>Personal Administrativo</option>
+                                <option value="4">Personal Docente</option>
+                                <option value="5">Personal Obrero</option>
+                                <option value="6">Pasante / Becario</option>
                             </select>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 25px;">
+                            <input type="checkbox" id="user_activo" checked style="width: auto;">
+                            <label for="user_activo" style="margin-bottom: 0;">Usuario Activo</label>
                         </div>
                     </div>
                     
-                    <div class="form-group" id="pwd_group" style="display: none; border-top: 1px solid #eee; padding-top: 15px; margin-top: 10px;">
-                        <label>Contraseña de Acceso (Para roles administrativos)</label>
-                        <input type="password" placeholder="Asigne una contraseña temporal">
+                    <div class="form-group" id="pwd_group" style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 10px;">
+                        <label for="password">Contraseña (Solo requerida para Administradores/Supervisores)</label>
+                        <input type="password" id="password" placeholder="Dejar en blanco para conservar contraseña actual">
+                        <small style="color: var(--text-light); font-size: 12px;">Para empleados regulares que solo usan el kiosco biométrico/QR, la contraseña es opcional.</small>
                     </div>
 
                 </div>
@@ -145,6 +148,245 @@
         </div>
     </div>
 
+    <script src="js/api.js"></script>
     <script src="js/scripts.js"></script>
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let departamentosList = [];
+        let horariosList = [];
+
+        async function loadDependencies() {
+            try {
+                const depsRes = await API.request('/departamentos?limit=100');
+                departamentosList = depsRes.items || [];
+                const depSelect = document.getElementById('departamento_id');
+                depSelect.innerHTML = '<option value="">Seleccione Departamento...</option>' + 
+                    departamentosList.map(d => `<option value="${d.id}">${escapeHtml(d.nombre)}</option>`).join('');
+
+                const horsRes = await API.request('/horarios?limit=100');
+                horariosList = horsRes.items || [];
+                const horSelect = document.getElementById('horario_id');
+                horSelect.innerHTML = '<option value="">Seleccione Horario...</option>' + 
+                    horariosList.map(h => `<option value="${h.id}">${escapeHtml(h.nombre)} (${h.tipo})</option>`).join('');
+            } catch (err) {
+                console.error("Error cargando dependencias:", err);
+            }
+        }
+
+        async function loadUsuarios(page = 1) {
+            const q = document.getElementById('filter-input').value.trim();
+            const tbody = document.getElementById('usuarios-tbody');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Cargando...</td></tr>';
+
+            try {
+                let url = `/usuarios?page=${page}&limit=10`;
+                if (q) url += `&q=${encodeURIComponent(q)}`;
+
+                const data = await API.request(url);
+                currentPage = data.page;
+                totalPages = data.pages || 1;
+
+                document.getElementById('pg-info').textContent = `Página ${currentPage} de ${totalPages}`;
+                document.getElementById('pg-first').disabled = currentPage <= 1;
+                document.getElementById('pg-prev').disabled = currentPage <= 1;
+                document.getElementById('pg-next').disabled = currentPage >= totalPages;
+                document.getElementById('pg-last').disabled = currentPage >= totalPages;
+
+                if (!data.items || data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-light);">No se encontraron usuarios.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.items.map(u => `
+                    <tr>
+                        <td><strong>${escapeHtml(u.documento_identidad)}</strong></td>
+                        <td>${escapeHtml(u.nombre_completo || ((u.nombre || u.nombres || '') + ' ' + (u.apellido || u.apellidos || '')).trim())}</td>
+                        <td><span class="badge" style="background:#e8eaf6; color:#283593; padding:2px 6px; border-radius:4px; font-size:12px;">${escapeHtml(u.rol || u.rol_nombre || 'Rol #' + u.rol_id)}</span></td>
+                        <td>${escapeHtml(u.departamento || u.departamento_nombre || '-')}</td>
+                        <td>${escapeHtml(u.horario || u.horario_nombre || '-')}</td>
+                        <td>
+                            <span title="Rostro registrado: ${u.tiene_biometria ? 'Sí' : 'No'}" style="cursor:help;">
+                                ${u.tiene_biometria ? '👤 Enrolado' : '❌ Sin rostro'}
+                            </span>
+                            <br>
+                            <span title="Código QR: ${u.tiene_qr ? 'Sí' : 'No'}" style="cursor:help; font-size:11px; color:var(--text-light);">
+                                ${u.tiene_qr ? '🏷️ QR Activo' : '⚠️ Sin QR'}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="${u.activo ? 'text-success' : 'text-danger'}" style="font-weight: 600;">
+                                ${u.activo ? '● Activo' : '○ Inactivo'}
+                            </span>
+                        </td>
+                        <td class="actions">
+                            <button class="btn btn-secondary btn-icon" onclick='openEditModal(${JSON.stringify(u).replace(/'/g, "&apos;")})'>Editar</button>
+                            <a href="biometria.html?id=${u.id}" class="btn btn-secondary btn-icon" title="Enrolar Rostro">Biometría</a>
+                            <a href="credencial.html?id=${u.id}" class="btn btn-secondary btn-icon" title="Credencial QR">Carnet</a>
+                            <button class="btn btn-danger btn-icon" onclick="deleteUsuario(${u.id})">${u.activo ? 'Desactivar' : 'Eliminar'}</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red;">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function openAddModal() {
+            document.getElementById('modal-title').textContent = 'Agregar Nuevo Usuario';
+            document.getElementById('edit-id').value = '';
+            document.getElementById('doc_identidad').value = '';
+            document.getElementById('doc_identidad').disabled = false;
+            document.getElementById('error_doc').style.display = 'none';
+            document.getElementById('nombres').value = '';
+            document.getElementById('apellidos').value = '';
+            document.getElementById('departamento_id').value = '';
+            document.getElementById('horario_id').value = '';
+            document.getElementById('rol_id').value = '3';
+            document.getElementById('password').value = '';
+            document.getElementById('user_activo').checked = true;
+            document.getElementById('btn_guardar_usr').disabled = false;
+            document.getElementById('modal-usuario').style.display = 'flex';
+        }
+
+        function openEditModal(u) {
+            document.getElementById('modal-title').textContent = 'Editar Expediente de Usuario';
+            document.getElementById('edit-id').value = u.id;
+            document.getElementById('doc_identidad').value = u.documento_identidad;
+            document.getElementById('doc_identidad').disabled = false;
+            document.getElementById('error_doc').style.display = 'none';
+            document.getElementById('nombres').value = u.nombre || u.nombres || '';
+            document.getElementById('apellidos').value = u.apellido || u.apellidos || '';
+            document.getElementById('departamento_id').value = u.departamento_id || '';
+            document.getElementById('horario_id').value = u.horario_id || '';
+            document.getElementById('rol_id').value = u.rol_id || '3';
+            document.getElementById('password').value = '';
+            document.getElementById('user_activo').checked = u.activo;
+            document.getElementById('btn_guardar_usr').disabled = false;
+            document.getElementById('modal-usuario').style.display = 'flex';
+        }
+
+        async function checkDocUniqueness() {
+            const docInput = document.getElementById('doc_identidad');
+            const doc = docInput.value.trim();
+            const editId = document.getElementById('edit-id').value;
+            const errSpan = document.getElementById('error_doc');
+            const saveBtn = document.getElementById('btn_guardar_usr');
+
+            if (!doc) return;
+
+            try {
+                let url = `/usuarios/check-documento?documento=${encodeURIComponent(doc)}`;
+                if (editId) url += `&exclude_id=${editId}`;
+
+                const res = await API.request(url);
+                if (res.exists) {
+                    docInput.style.borderColor = 'red';
+                    errSpan.textContent = res.message || 'El documento ya está registrado en el sistema.';
+                    errSpan.style.display = 'block';
+                    saveBtn.disabled = true;
+                } else {
+                    docInput.style.borderColor = '';
+                    errSpan.style.display = 'none';
+                    saveBtn.disabled = false;
+                }
+            } catch (err) {
+                console.error("Error verificando documento:", err);
+            }
+        }
+
+        async function deleteUsuario(id) {
+            if (!confirm('¿Está seguro de desactivar este usuario?')) {
+                return;
+            }
+            try {
+                await API.request(`/usuarios/${id}`, { method: 'DELETE' });
+                API.showToast('Usuario desactivado exitosamente.', 'success');
+                loadUsuarios(currentPage);
+            } catch (err) {
+                // error handled
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = API.getUser();
+            if (user) {
+                document.getElementById('user-display').textContent = `${user.nombres} (${user.rol})`;
+            }
+
+            await loadDependencies();
+
+            document.getElementById('doc_identidad').addEventListener('blur', checkDocUniqueness);
+            document.getElementById('btn-add-usuario').addEventListener('click', openAddModal);
+            document.getElementById('btn-search').addEventListener('click', () => loadUsuarios(1));
+            document.getElementById('filter-input').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') loadUsuarios(1);
+            });
+
+            document.getElementById('pg-first').addEventListener('click', () => loadUsuarios(1));
+            document.getElementById('pg-prev').addEventListener('click', () => { if (currentPage > 1) loadUsuarios(currentPage - 1); });
+            document.getElementById('pg-next').addEventListener('click', () => { if (currentPage < totalPages) loadUsuarios(currentPage + 1); });
+            document.getElementById('pg-last').addEventListener('click', () => loadUsuarios(totalPages));
+
+            document.getElementById('form-usuario').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const editId = document.getElementById('edit-id').value;
+                const documento_identidad = document.getElementById('doc_identidad').value.trim();
+                const nombre = document.getElementById('nombres').value.trim();
+                const apellido = document.getElementById('apellidos').value.trim();
+                const depVal = document.getElementById('departamento_id').value;
+                const departamento_id = depVal ? parseInt(depVal) : null;
+                const horVal = document.getElementById('horario_id').value;
+                const horario_id = horVal ? parseInt(horVal) : null;
+                const rolVal = document.getElementById('rol_id').value;
+                const rol_id = rolVal ? parseInt(rolVal) : 3;
+                const activo = document.getElementById('user_activo').checked;
+                const pwd = document.getElementById('password').value.trim();
+
+                if (!documento_identidad || !nombre || !apellido || !departamento_id) {
+                    API.showToast('Por favor complete los campos requeridos (*).', 'warning');
+                    return;
+                }
+
+                const payload = {
+                    documento_identidad,
+                    nombre,
+                    apellido,
+                    departamento_id,
+                    horario_id,
+                    rol_id,
+                    activo
+                };
+                if (pwd) payload.password = pwd;
+
+                try {
+                    if (editId) {
+                        await API.request(`/usuarios/${editId}`, {
+                            method: 'PUT',
+                            body: JSON.stringify(payload)
+                        });
+                        API.showToast('Usuario actualizado con éxito.', 'success');
+                    } else {
+                        await API.request('/usuarios', {
+                            method: 'POST',
+                            body: JSON.stringify(payload)
+                        });
+                        API.showToast('Usuario registrado con éxito.', 'success');
+                    }
+                    document.getElementById('modal-usuario').style.display = 'none';
+                    loadUsuarios(currentPage);
+                } catch (err) {
+                    // Handled in API.request
+                }
+            });
+
+            loadUsuarios(1);
+        });
+    </script>
 </body>
 </html>

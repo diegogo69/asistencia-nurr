@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Credencial QR - Asistencia NURR</title>
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        @media print {
+            .sidebar, .top-bar, .toolbar, .btn, .no-print {
+                display: none !important;
+            }
+            .main-content {
+                padding: 0 !important;
+            }
+            .content-panel {
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .printable-card {
+                border: 2px solid #000 !important;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
 </head>
 <body>
     <aside class="sidebar">
@@ -12,56 +30,242 @@
         <nav>
             <ul>
                 <li><a href="index.html">Inicio</a></li>
+                <li><a href="marcacion.html">Punto de Marcación</a></li>
+                <li><a href="unidades.html">Unidades Organizacionales</a></li>
+                <li><a href="horarios.html">Gestión de Horarios</a></li>
+                <li><a href="redes.html">Rangos de Red</a></li>
                 <li><a href="usuarios.html">Gestión de Usuarios</a></li>
                 <li><a href="biometria.html">Registro Biométrico</a></li>
                 <li><a href="credencial.html" class="active">Credencial QR</a></li>
+                <li><a href="asistencias_incompletas.html">Asistencias Incompletas</a></li>
+                <li><a href="historial.html">Historial de Asistencia</a></li>
+                <li><a href="reportes.html">Reportes</a></li>
             </ul>
         </nav>
     </aside>
 
     <main class="main-content">
         <header class="top-bar">
-            <h1>Credencial y Registro QR</h1>
+            <h1>Credencial y Emisión de Carnet QR</h1>
+            <div class="user-info">
+                <span id="user-display">Administrador</span>
+                <button onclick="API.logout()" class="btn btn-secondary">Cerrar Sesión</button>
+            </div>
         </header>
 
-        <section class="content-panel" style="max-width: 800px; margin: 0 auto; display: flex; gap: 40px; flex-wrap: wrap;">
+        <section class="content-panel" style="max-width: 850px; margin: 0 auto; display: flex; gap: 40px; flex-wrap: wrap;">
             
-            <div style="flex: 1; min-width: 300px;">
-                <h3>Seleccionar Usuario</h3>
+            <div style="flex: 1; min-width: 320px;">
+                <h3>Seleccionar Personal</h3>
                 <div class="form-group" style="margin-top: 15px;">
-                    <input type="text" placeholder="Buscar por cédula o nombre...">
+                    <label for="select-usuario">Usuario Registrado:</label>
+                    <select id="select-usuario">
+                        <option value="">Cargando usuarios...</option>
+                    </select>
                 </div>
                 
                 <div style="margin-top: 20px;">
-                    <p style="font-size: 14px; margin-bottom: 5px;"><strong>Usuario Seleccionado:</strong></p>
-                    <div style="background-color: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color);">
-                        <p><strong>Nombres:</strong> Ana María</p>
-                        <p><strong>Apellidos:</strong> Silva Rojas</p>
-                        <p><strong>Documento:</strong> V-22334455</p>
-                        <p><strong>Departamento:</strong> Coordinación Académica</p>
-                        <p><strong>Rol:</strong> Personal Docente</p>
+                    <p style="font-size: 14px; margin-bottom: 5px;"><strong>Ficha del Usuario:</strong></p>
+                    <div id="user-card-info" style="background-color: var(--bg-color); padding: 18px; border-radius: 8px; border: 1px solid var(--border-color); line-height: 1.8;">
+                        <p><strong>Nombres:</strong> <span id="card-nombres">-</span></p>
+                        <p><strong>Apellidos:</strong> <span id="card-apellidos">-</span></p>
+                        <p><strong>Documento:</strong> <span id="card-documento">-</span></p>
+                        <p><strong>Departamento:</strong> <span id="card-departamento">-</span></p>
+                        <p><strong>Rol:</strong> <span id="card-rol">-</span></p>
+                        <p><strong>Horario:</strong> <span id="card-horario">-</span></p>
                     </div>
+                </div>
+
+                <div style="margin-top: 25px;" class="no-print">
+                    <a href="usuarios.html" class="btn btn-secondary">← Volver a Usuarios</a>
                 </div>
             </div>
 
-            <div style="flex: 1; min-width: 300px; display: flex; flex-direction: column; align-items: center;">
-                <h3>Código QR Generado</h3>
-                <div class="qr-container">
-                    <div class="qr-box">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=ULA-NURR-V22334455-SIMULADO" alt="Código QR Simulado">
+            <div style="flex: 1; min-width: 320px; display: flex; flex-direction: column; align-items: center;">
+                <h3>Credencial Institucional</h3>
+                
+                <div class="printable-card" style="margin: 15px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; background: white; text-align: center; width: 100%; max-width: 280px; box-shadow: 0 4px 10px rgba(0,0,0,0.06);">
+                    <div style="font-size: 11px; font-weight: bold; color: var(--primary-color); text-transform: uppercase; margin-bottom: 8px;">
+                        Universidad de Los Andes<br>NURR - Soporte Técnico
                     </div>
                     
-                    <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                        <button class="btn btn-primary" onclick="alert('Descargando credencial en PDF...')">Descargar Credencial QR</button>
-                        <button class="btn btn-secondary" onclick="window.print()">Imprimir Carnet</button>
-                        <button class="btn btn-danger" onclick="alert('Hash antiguo invalidado. Nuevo QR generado.')">Regenerar Código QR</button>
+                    <div class="qr-box" style="margin: 10px auto; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; background: #fafafa; border: 1px solid #eee;">
+                        <img id="qr-preview-img" src="" alt="Código QR del Usuario" style="width: 170px; height: 170px; display: none;">
+                        <span id="qr-loading-text" style="color: var(--text-light); font-size: 13px;">Seleccione usuario</span>
                     </div>
+
+                    <div style="margin-top: 8px; font-weight: bold; font-size: 14px;" id="badge-name">-</div>
+                    <div style="font-size: 12px; color: var(--text-light);" id="badge-doc">-</div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px;" class="no-print">
+                    <button id="btn-download-pdf" class="btn btn-primary" disabled>Descargar Credencial PDF</button>
+                    <button id="btn-print" class="btn btn-secondary" onclick="window.print()">Imprimir Carnet</button>
+                    <button id="btn-regenerate-qr" class="btn btn-danger" disabled>Regenerar Código QR</button>
                 </div>
             </div>
 
         </section>
     </main>
 
+    <script src="js/api.js"></script>
     <script src="js/scripts.js"></script>
+    <script>
+        let usersList = [];
+        let currentUserId = null;
+
+        async function loadUsers(preselectId) {
+            try {
+                const res = await API.request('/usuarios?limit=100');
+                usersList = res.items || [];
+
+                if (preselectId && !usersList.some(u => u.id == preselectId)) {
+                    try {
+                        const specificUser = await API.request(`/usuarios/${preselectId}`);
+                        if (specificUser) {
+                            usersList.unshift(specificUser);
+                        }
+                    } catch (_) {}
+                }
+
+                const select = document.getElementById('select-usuario');
+                select.innerHTML = '<option value="">-- Seleccione un Personal --</option>' + 
+                    usersList.map(u => `
+                        <option value="${u.id}" ${preselectId == u.id ? 'selected' : ''}>
+                            ${escapeHtml(u.nombre_completo || ((u.nombres || u.nombre || '') + ' ' + (u.apellidos || u.apellido || '')).trim())} (${escapeHtml(u.documento_identidad)})
+                        </option>
+                    `).join('');
+
+                if (preselectId) {
+                    select.value = preselectId;
+                    selectUser(preselectId);
+                }
+            } catch (err) {
+                console.error("Error al cargar personal:", err);
+                API.showToast(`Error al cargar personal: ${err.message}`, 'error');
+            }
+        }
+
+        async function selectUser(userId) {
+            currentUserId = userId;
+            const u = usersList.find(item => item.id == userId);
+            const qrImg = document.getElementById('qr-preview-img');
+            const qrLoading = document.getElementById('qr-loading-text');
+            const btnPdf = document.getElementById('btn-download-pdf');
+            const btnRegen = document.getElementById('btn-regenerate-qr');
+
+            if (!u) {
+                document.getElementById('card-nombres').textContent = '-';
+                document.getElementById('card-apellidos').textContent = '-';
+                document.getElementById('card-documento').textContent = '-';
+                document.getElementById('card-departamento').textContent = '-';
+                document.getElementById('card-rol').textContent = '-';
+                document.getElementById('card-horario').textContent = '-';
+                document.getElementById('badge-name').textContent = '-';
+                document.getElementById('badge-doc').textContent = '-';
+                qrImg.style.display = 'none';
+                qrLoading.style.display = 'block';
+                qrLoading.textContent = 'Seleccione usuario';
+                btnPdf.disabled = true;
+                btnRegen.disabled = true;
+                return;
+            }
+
+            document.getElementById('card-nombres').textContent = u.nombres || u.nombre || '';
+            document.getElementById('card-apellidos').textContent = u.apellidos || u.apellido || '';
+            document.getElementById('card-documento').textContent = u.documento_identidad;
+            document.getElementById('card-departamento').textContent = u.departamento || u.departamento_nombre || '-';
+            document.getElementById('card-rol').textContent = u.rol || u.rol_nombre || `Rol #${u.rol_id}`;
+            document.getElementById('card-horario').textContent = u.horario || u.horario_nombre || '-';
+
+            document.getElementById('badge-name').textContent = u.nombre_completo || `${u.nombres || u.nombre} ${u.apellidos || u.apellido}`;
+            document.getElementById('badge-doc').textContent = u.documento_identidad;
+
+            // Load QR Image
+            qrLoading.style.display = 'block';
+            qrLoading.textContent = 'Cargando QR...';
+            qrImg.style.display = 'none';
+
+            try {
+                const blob = await API.request(`/usuarios/${userId}/credencial-qr`);
+                const objectUrl = URL.createObjectURL(blob);
+                qrImg.src = objectUrl;
+                qrImg.style.display = 'block';
+                qrLoading.style.display = 'none';
+                btnPdf.disabled = false;
+                btnRegen.disabled = false;
+            } catch (err) {
+                qrLoading.textContent = 'Error al cargar QR';
+                console.error(err);
+            }
+        }
+
+        async function downloadPdf() {
+            if (!currentUserId) return;
+            const btn = document.getElementById('btn-download-pdf');
+            btn.disabled = true;
+            btn.textContent = 'Generando PDF...';
+
+            try {
+                const blob = await API.request(`/usuarios/${currentUserId}/credencial-pdf`);
+                const u = usersList.find(item => item.id == currentUserId);
+                const docName = u ? u.documento_identidad : `user_${currentUserId}`;
+                
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `credencial_${docName}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                API.showToast('Credencial PDF descargada exitosamente.', 'success');
+            } catch (err) {
+                API.showToast(`Error al descargar PDF: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Descargar Credencial PDF';
+            }
+        }
+
+        async function regenerateQr() {
+            if (!currentUserId) return;
+            if (!confirm('¿Desea regenerar el código QR? El código QR anterior quedará invalidado de inmediato.')) {
+                return;
+            }
+
+            try {
+                await API.request(`/usuarios/${currentUserId}/regenerar-qr`, { method: 'POST' });
+                API.showToast('¡Código QR regenerado con nuevo hash seguro!', 'success');
+                await selectUser(currentUserId);
+            } catch (err) {
+                API.showToast(`Error regenerando QR: ${err.message}`, 'error');
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = API.getUser();
+            if (user) {
+                document.getElementById('user-display').textContent = `${user.nombres} (${user.rol})`;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const preselectId = urlParams.get('id');
+
+            document.getElementById('select-usuario').addEventListener('change', function() {
+                selectUser(this.value);
+            });
+            document.getElementById('btn-download-pdf').addEventListener('click', downloadPdf);
+            document.getElementById('btn-regenerate-qr').addEventListener('click', regenerateQr);
+
+            await loadUsers(preselectId);
+        });
+    </script>
 </body>
 </html>
