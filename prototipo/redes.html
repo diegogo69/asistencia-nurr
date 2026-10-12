@@ -12,9 +12,14 @@
         <nav>
             <ul>
                 <li><a href="index.html">Inicio</a></li>
+                <li><a href="marcacion.html">Punto de Marcación</a></li>
                 <li><a href="unidades.html">Unidades Organizacionales</a></li>
                 <li><a href="horarios.html">Gestión de Horarios</a></li>
                 <li><a href="redes.html" class="active">Rangos de Red</a></li>
+                <li><a href="usuarios.html">Gestión de Usuarios</a></li>
+                <li><a href="asistencias_incompletas.html">Asistencias Incompletas</a></li>
+                <li><a href="historial.html">Historial de Asistencia</a></li>
+                <li><a href="reportes.html">Reportes</a></li>
             </ul>
         </nav>
     </aside>
@@ -22,16 +27,22 @@
     <main class="main-content">
         <header class="top-bar">
             <h1>Gestión de Rangos de Red Autorizados</h1>
+            <div class="user-info">
+                <span id="user-display">Administrador</span>
+                <button onclick="API.logout()" class="btn btn-secondary">Cerrar Sesión</button>
+            </div>
         </header>
 
         <section class="content-panel">
-            <p style="margin-bottom: 20px; color: var(--text-light);">Configure las direcciones IP desde las cuales se permite el registro de asistencia (Punto de marcacións).</p>
+            <p style="margin-bottom: 20px; color: var(--text-light);">
+                Configure las direcciones IP fijas o subredes CIDR desde las cuales se permite el registro de marcaciones en el Punto de Marcación.
+            </p>
             
             <div class="toolbar">
-                <button class="btn btn-primary" data-modal-target="modal-red">Agregar Red</button>
+                <button id="btn-add-red" class="btn btn-primary">Agregar Red</button>
                 <div class="search-bar">
-                    <input type="text" placeholder="Buscar por IP o descripción...">
-                    <button class="btn btn-secondary">Buscar</button>
+                    <input type="text" id="filter-input" placeholder="Buscar por IP o descripción...">
+                    <button id="btn-search" class="btn btn-secondary">Buscar</button>
                 </div>
             </div>
 
@@ -45,37 +56,18 @@
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>192.168.1.100</td>
-                            <td>Punto de marcación Entrada Principal</td>
-                            <td><span class="text-success">Activo</span></td>
-                            <td class="actions">
-                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-red">Editar</button>
-                                <button class="btn btn-secondary btn-icon" onclick="alert('Estado cambiado')">Desactivar</button>
-                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Eliminar regla?')">Eliminar</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>192.168.2.0/24</td>
-                            <td>Red Laboratorios Piso 2</td>
-                            <td><span class="text-danger">Inactivo</span></td>
-                            <td class="actions">
-                                <button class="btn btn-secondary btn-icon" data-modal-target="modal-red">Editar</button>
-                                <button class="btn btn-success btn-icon" onclick="alert('Estado cambiado')">Activar</button>
-                                <button class="btn btn-danger btn-icon" onclick="confirm('¿Eliminar regla?')">Eliminar</button>
-                            </td>
-                        </tr>
+                    <tbody id="redes-tbody">
+                        <tr><td colspan="4" style="text-align: center;">Cargando redes autorizadas...</td></tr>
                     </tbody>
                 </table>
             </div>
             
             <div class="pagination">
-                <button disabled>Primero</button>
-                <button disabled>Anterior</button>
-                <span>Página 1 de 1</span>
-                <button disabled>Siguiente</button>
-                <button disabled>Último</button>
+                <button id="pg-first">Primero</button>
+                <button id="pg-prev">Anterior</button>
+                <span id="pg-info">Página 1 de 1</span>
+                <button id="pg-next">Siguiente</button>
+                <button id="pg-last">Último</button>
             </div>
         </section>
     </main>
@@ -84,28 +76,187 @@
     <div class="modal-overlay" id="modal-red">
         <div class="modal">
             <div class="modal-header">
-                <h3>Formulario de Regla de Red</h3>
-                <button class="close-btn">&times;</button>
+                <h3 id="modal-title">Agregar Regla de Red</h3>
+                <button class="close-btn" data-modal-close>&times;</button>
             </div>
-            <form class="simulate-save">
+            <form id="form-red">
+                <input type="hidden" id="edit-id">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label>Dirección IP / CIDR</label>
-                        <input type="text" placeholder="Ej. 192.168.1.50 o 10.0.0.0/16" required>
+                        <label for="ip_o_cidr">Dirección IP o Rango CIDR <span style="color:red">*</span></label>
+                        <input type="text" id="ip_o_cidr" placeholder="Ej. 192.168.1.50 o 10.0.0.0/16" required>
+                        <small style="color: var(--text-light); font-size: 12px; display: block; margin-top: 4px;">
+                            Formatos válidos: IPv4 individual (ej: 192.168.1.100) o CIDR (ej: 192.168.1.0/24).
+                        </small>
                     </div>
                     <div class="form-group">
-                        <label>Descripción</label>
-                        <textarea rows="3" placeholder="Ubicación o propósito de la regla..." required></textarea>
+                        <label for="descripcion">Descripción / Ubicación</label>
+                        <textarea id="descripcion" rows="3" placeholder="Punto de marcación Entrada Principal, Laboratorio de Soporte, etc..."></textarea>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="activo" checked style="width: auto;">
+                        <label for="activo" style="margin-bottom: 0;">Regla Activa</label>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary close-btn" data-modal-close>Cerrar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Regla</button>
+                    <button type="submit" id="btn-save-red" class="btn btn-primary">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <script src="js/api.js"></script>
     <script src="js/scripts.js"></script>
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+
+        async function loadRedes(page = 1) {
+            const q = document.getElementById('filter-input').value.trim();
+            const tbody = document.getElementById('redes-tbody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Cargando...</td></tr>';
+
+            try {
+                let url = `/redes?page=${page}&limit=10`;
+                if (q) url += `&q=${encodeURIComponent(q)}`;
+
+                const data = await API.request(url);
+                currentPage = data.page;
+                totalPages = data.pages || 1;
+
+                document.getElementById('pg-info').textContent = `Página ${currentPage} de ${totalPages}`;
+                document.getElementById('pg-first').disabled = currentPage <= 1;
+                document.getElementById('pg-prev').disabled = currentPage <= 1;
+                document.getElementById('pg-next').disabled = currentPage >= totalPages;
+                document.getElementById('pg-last').disabled = currentPage >= totalPages;
+
+                if (!data.items || data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-light);">No se encontraron redes registradas.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.items.map(r => `
+                    <tr>
+                        <td><strong>${escapeHtml(r.ip_o_cidr)}</strong></td>
+                        <td>${escapeHtml(r.descripcion || '-')}</td>
+                        <td>
+                            <span class="${r.activo ? 'text-success' : 'text-danger'}" style="font-weight: 600;">
+                                ${r.activo ? '● Activa' : '○ Inactiva'}
+                            </span>
+                        </td>
+                        <td class="actions">
+                            <button class="btn btn-secondary btn-icon" onclick="openEditModal(${r.id}, '${escapeAttr(r.ip_o_cidr)}', '${escapeAttr(r.descripcion || '')}', ${r.activo})">Editar</button>
+                            <button class="btn btn-secondary btn-icon" onclick="toggleRed(${r.id})">${r.activo ? 'Desactivar' : 'Activar'}</button>
+                            <button class="btn btn-danger btn-icon" onclick="deleteRed(${r.id})">Eliminar</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: red;">Error al cargar datos: ${err.message}</td></tr>`;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function escapeAttr(str) {
+            if (!str) return '';
+            return str.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        }
+
+        function openAddModal() {
+            document.getElementById('modal-title').textContent = 'Agregar Rango de Red';
+            document.getElementById('edit-id').value = '';
+            document.getElementById('ip_o_cidr').value = '';
+            document.getElementById('descripcion').value = '';
+            document.getElementById('activo').checked = true;
+            document.getElementById('modal-red').style.display = 'flex';
+        }
+
+        function openEditModal(id, ip, desc, activo) {
+            document.getElementById('modal-title').textContent = 'Editar Rango de Red';
+            document.getElementById('edit-id').value = id;
+            document.getElementById('ip_o_cidr').value = ip;
+            document.getElementById('descripcion').value = desc;
+            document.getElementById('activo').checked = activo;
+            document.getElementById('modal-red').style.display = 'flex';
+        }
+
+        async function toggleRed(id) {
+            try {
+                await API.request(`/redes/${id}/toggle`, { method: 'PATCH' });
+                API.showToast('Estado de la red actualizado correctamente.', 'success');
+                loadRedes(currentPage);
+            } catch (err) {
+                // error handled in API.request
+            }
+        }
+
+        async function deleteRed(id) {
+            if (!confirm('¿Está seguro de eliminar esta regla de red? Las marcaciones desde este origen ya no serán permitidas.')) {
+                return;
+            }
+            try {
+                await API.request(`/redes/${id}`, { method: 'DELETE' });
+                API.showToast('Regla de red eliminada.', 'success');
+                loadRedes(currentPage);
+            } catch (err) {
+                // error handled
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = API.getUser();
+            if (user) {
+                document.getElementById('user-display').textContent = `${user.nombres} (${user.rol})`;
+            }
+
+            document.getElementById('btn-add-red').addEventListener('click', openAddModal);
+            document.getElementById('btn-search').addEventListener('click', () => loadRedes(1));
+            document.getElementById('filter-input').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') loadRedes(1);
+            });
+
+            document.getElementById('pg-first').addEventListener('click', () => loadRedes(1));
+            document.getElementById('pg-prev').addEventListener('click', () => { if (currentPage > 1) loadRedes(currentPage - 1); });
+            document.getElementById('pg-next').addEventListener('click', () => { if (currentPage < totalPages) loadRedes(currentPage + 1); });
+            document.getElementById('pg-last').addEventListener('click', () => loadRedes(totalPages));
+
+            document.getElementById('form-red').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const editId = document.getElementById('edit-id').value;
+                const ip_o_cidr = document.getElementById('ip_o_cidr').value.trim();
+                const descripcion = document.getElementById('descripcion').value.trim();
+                const activo = document.getElementById('activo').checked;
+
+                const payload = { ip_o_cidr, descripcion, activo };
+
+                try {
+                    if (editId) {
+                        await API.request(`/redes/${editId}`, {
+                            method: 'PUT',
+                            body: JSON.stringify(payload)
+                        });
+                        API.showToast('Regla de red actualizada con éxito.', 'success');
+                    } else {
+                        await API.request('/redes', {
+                            method: 'POST',
+                            body: JSON.stringify(payload)
+                        });
+                        API.showToast('Regla de red registrada con éxito.', 'success');
+                    }
+                    document.getElementById('modal-red').style.display = 'none';
+                    loadRedes(currentPage);
+                } catch (err) {
+                    // Handled in API.request
+                }
+            });
+
+            loadRedes(1);
+        });
+    </script>
 </body>
 </html>

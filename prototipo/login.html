@@ -12,10 +12,10 @@
             <h2>Asistencia ULA-NURR</h2>
             <p style="margin-bottom: 25px; color: var(--text-light);">Autenticación Administrativa</p>
             
-            <form class="simulate-save">
+            <form id="form-login">
                 <div class="form-group" style="text-align: left;">
-                    <label for="documento">Documento / Usuario</label>
-                    <input type="text" id="documento" placeholder="Ingrese su documento" required>
+                    <label for="documento">Documento / Cédula</label>
+                    <input type="text" id="documento" placeholder="Ej: V-00000000" required autofocus>
                 </div>
                 
                 <div class="form-group" style="text-align: left;">
@@ -23,15 +23,37 @@
                     <input type="password" id="password" placeholder="Ingrese su contraseña" required>
                 </div>
                 
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Iniciar Sesión</button>
+                <button type="submit" id="btn-submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Iniciar Sesión</button>
             </form>
             
             <div style="margin-top: 20px;">
-                <a href="index.html" style="color: var(--primary-color); text-decoration: none; font-size: 14px;">Volver al Dashboard (Prototipo)</a>
+                <a href="marcacion.html" style="color: var(--primary-color); text-decoration: none; font-size: 14px;">Ir al Punto de Marcación (Kiosco) →</a>
             </div>
         </div>
     </div>
 
-    <script src="js/scripts.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('form-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const doc = document.getElementById('documento').value.trim();
+            const pass = document.getElementById('password').value;
+            const btn = document.getElementById('btn-submit');
+
+            btn.disabled = true;
+            btn.textContent = 'Verificando...';
+
+            try {
+                const res = await API.login(doc, pass);
+                API.showToast(`Bienvenido(a), ${res.user.nombre_completo}`, 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 800);
+            } catch (err) {
+                btn.disabled = false;
+                btn.textContent = 'Iniciar Sesión';
+            }
+        });
+    </script>
 </body>
 </html>

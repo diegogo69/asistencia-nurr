@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial - Asistencia NURR</title>
+    <title>Historial de Asistencia - Asistencia NURR</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -12,6 +12,11 @@
         <nav>
             <ul>
                 <li><a href="index.html">Inicio</a></li>
+                <li><a href="marcacion.html">Punto de Marcación</a></li>
+                <li><a href="unidades.html">Unidades Organizacionales</a></li>
+                <li><a href="horarios.html">Gestión de Horarios</a></li>
+                <li><a href="redes.html">Rangos de Red</a></li>
+                <li><a href="usuarios.html">Gestión de Usuarios</a></li>
                 <li><a href="asistencias_incompletas.html">Asistencias Incompletas</a></li>
                 <li><a href="historial.html" class="active">Historial de Asistencia</a></li>
                 <li><a href="reportes.html">Reportes</a></li>
@@ -22,40 +27,46 @@
     <main class="main-content">
         <header class="top-bar">
             <h1>Consulta de Historial de Asistencia</h1>
+            <div class="user-info">
+                <span id="user-display">Administrador</span>
+                <button onclick="API.logout()" class="btn btn-secondary">Cerrar Sesión</button>
+            </div>
         </header>
 
         <section class="content-panel">
             <!-- Filtros Avanzados -->
-            <div style="background-color: var(--bg-color); padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+            <div style="background-color: var(--bg-color); padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border-color);">
                 <h3 style="margin-bottom: 15px; font-size: 16px;">Filtros de Búsqueda</h3>
-                <form class="simulate-save" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+                <form id="form-filtros" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: end;">
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Desde:</label>
-                        <input type="date">
+                        <label for="filtro-desde">Desde:</label>
+                        <input type="date" id="filtro-desde">
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Hasta:</label>
-                        <input type="date">
+                        <label for="filtro-hasta">Hasta:</label>
+                        <input type="date" id="filtro-hasta">
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Departamento:</label>
-                        <select>
-                            <option value="">Todos</option>
-                            <option>Soporte Técnico</option>
-                            <option>Coordinación Académica</option>
+                        <label for="filtro-depto">Departamento:</label>
+                        <select id="filtro-depto">
+                            <option value="">Todos los departamentos</option>
                         </select>
                     </div>
                     <div class="form-group" style="margin-bottom: 0;">
-                        <label>Estado:</label>
-                        <select>
-                            <option value="">Todos</option>
-                            <option>Puntual</option>
-                            <option>Retraso</option>
-                            <option>Anticipada</option>
-                            <option>Incompleto</option>
+                        <label for="filtro-estado">Estado:</label>
+                        <select id="filtro-estado">
+                            <option value="">Todos los estados</option>
+                            <option value="Puntual">Puntual</option>
+                            <option value="Retraso">Retraso</option>
+                            <option value="Anticipada">Anticipada</option>
+                            <option value="Incompleto">Incompleto</option>
+                            <option value="Abandono de jornada">Abandono de jornada</option>
                         </select>
                     </div>
-                    <button type="button" class="btn btn-primary" onclick="alert('Aplicando filtros a la consulta...')">Consultar</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">Consultar</button>
+                        <button type="button" id="btn-limpiar" class="btn btn-secondary">Limpiar</button>
+                    </div>
                 </form>
             </div>
 
@@ -64,56 +75,147 @@
                     <thead>
                         <tr>
                             <th>Fecha</th>
-                            <th>Usuario</th>
+                            <th>Personal</th>
+                            <th>Cédula</th>
                             <th>Departamento</th>
                             <th>Entrada</th>
                             <th>Salida</th>
                             <th>Método</th>
+                            <th>Horas</th>
                             <th>Estado</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>12-07-2026</td>
-                            <td>Ana Silva</td>
-                            <td>Coordinación Académica</td>
-                            <td>07:55 AM</td>
-                            <td>04:05 PM</td>
-                            <td>Facial</td>
-                            <td><span class="text-success">Puntual</span></td>
-                        </tr>
-                        <tr>
-                            <td>12-07-2026</td>
-                            <td>Juan Pérez</td>
-                            <td>Soporte Técnico</td>
-                            <td>08:15 AM</td>
-                            <td>03:50 PM</td>
-                            <td>QR</td>
-                            <td><span style="color: #ff9800;">Retraso</span></td>
-                        </tr>
-                        <tr>
-                            <td>13-07-2026</td>
-                            <td>Pedro González</td>
-                            <td>Soporte Técnico</td>
-                            <td>08:00 AM</td>
-                            <td>-</td>
-                            <td>Facial</td>
-                            <td><span class="text-danger">Incompleto</span></td>
-                        </tr>
+                    <tbody id="historial-tbody">
+                        <tr><td colspan="9" style="text-align: center;">Cargando historial de asistencias...</td></tr>
                     </tbody>
                 </table>
             </div>
             
             <div class="pagination">
-                <button disabled>Primero</button>
-                <button disabled>Anterior</button>
-                <span>Página 1 de 15</span>
-                <button>Siguiente</button>
-                <button>Último</button>
+                <button id="pg-first">Primero</button>
+                <button id="pg-prev">Anterior</button>
+                <span id="pg-info">Página 1 de 1</span>
+                <button id="pg-next">Siguiente</button>
+                <button id="pg-last">Último</button>
             </div>
         </section>
     </main>
 
+    <script src="js/api.js"></script>
     <script src="js/scripts.js"></script>
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+
+        async function loadDepartamentos() {
+            try {
+                const res = await API.request('/departamentos?limit=100');
+                const select = document.getElementById('filtro-depto');
+                if (res.items) {
+                    res.items.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.id;
+                        opt.textContent = d.nombre;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (err) {
+                console.error("Error cargando departamentos:", err);
+            }
+        }
+
+        async function loadHistorial(page = 1) {
+            const desde = document.getElementById('filtro-desde').value;
+            const hasta = document.getElementById('filtro-hasta').value;
+            const depto = document.getElementById('filtro-depto').value;
+            const estado = document.getElementById('filtro-estado').value;
+
+            const tbody = document.getElementById('historial-tbody');
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">Cargando...</td></tr>';
+
+            try {
+                let url = `/asistencias/historial?page=${page}&limit=10`;
+                if (desde) url += `&fecha_desde=${encodeURIComponent(desde)}`;
+                if (hasta) url += `&fecha_hasta=${encodeURIComponent(hasta)}`;
+                if (depto) url += `&departamento_id=${encodeURIComponent(depto)}`;
+                if (estado) url += `&estado=${encodeURIComponent(estado)}`;
+
+                const data = await API.request(url);
+                currentPage = data.page;
+                totalPages = data.pages || 1;
+
+                document.getElementById('pg-info').textContent = `Página ${currentPage} de ${totalPages}`;
+                document.getElementById('pg-first').disabled = currentPage <= 1;
+                document.getElementById('pg-prev').disabled = currentPage <= 1;
+                document.getElementById('pg-next').disabled = currentPage >= totalPages;
+                document.getElementById('pg-last').disabled = currentPage >= totalPages;
+
+                if (!data.items || data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-light);">No se encontraron registros para los filtros seleccionados.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.items.map(row => {
+                    const statusClass = {
+                        'Puntual': 'text-success',
+                        'Retraso': 'text-warning',
+                        'Anticipada': 'text-info',
+                        'Incompleto': 'text-danger',
+                        'Abandono de jornada': 'text-danger'
+                    }[row.estado] || '';
+
+                    return `
+                        <tr>
+                            <td><strong>${escapeHtml(row.fecha)}</strong></td>
+                            <td>${escapeHtml(row.usuario_nombre)}</td>
+                            <td>${escapeHtml(row.documento_identidad)}</td>
+                            <td>${escapeHtml(row.departamento_nombre || '-')}</td>
+                            <td>${escapeHtml(row.hora_entrada ? row.hora_entrada.substring(0, 5) : '-')}</td>
+                            <td>${escapeHtml(row.hora_salida ? row.hora_salida.substring(0, 5) : '-')}</td>
+                            <td><span style="font-size: 12px; text-transform: uppercase;">${escapeHtml(row.metodo_marcacion)}</span></td>
+                            <td>${row.horas_trabajadas != null ? row.horas_trabajadas.toFixed(2) + ' h' : '-'}</td>
+                            <td><span class="${statusClass}" style="font-weight: 600;">${escapeHtml(row.estado)}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: red;">Error: ${err.message}</td></tr>`;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = API.getUser();
+            if (user) {
+                document.getElementById('user-display').textContent = `${user.nombres} (${user.rol})`;
+            }
+
+            await loadDepartamentos();
+
+            document.getElementById('form-filtros').addEventListener('submit', (e) => {
+                e.preventDefault();
+                loadHistorial(1);
+            });
+
+            document.getElementById('btn-limpiar').addEventListener('click', () => {
+                document.getElementById('filtro-desde').value = '';
+                document.getElementById('filtro-hasta').value = '';
+                document.getElementById('filtro-depto').value = '';
+                document.getElementById('filtro-estado').value = '';
+                loadHistorial(1);
+            });
+
+            document.getElementById('pg-first').addEventListener('click', () => loadHistorial(1));
+            document.getElementById('pg-prev').addEventListener('click', () => { if (currentPage > 1) loadHistorial(currentPage - 1); });
+            document.getElementById('pg-next').addEventListener('click', () => { if (currentPage < totalPages) loadHistorial(currentPage + 1); });
+            document.getElementById('pg-last').addEventListener('click', () => loadHistorial(totalPages));
+
+            loadHistorial(1);
+        });
+    </script>
 </body>
 </html>

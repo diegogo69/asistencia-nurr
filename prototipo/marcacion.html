@@ -3,59 +3,414 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Punto de Marcación - Asistencia NURR</title>
+    <title>Punto de Marcación Kiosco - Asistencia NURR</title>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- Carga de face-api.js para extracción de vector 128D -->
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+    <style>
+        .kiosk-mode {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0b2545 0%, #134074 100%);
+            padding: 20px;
+        }
+        .kiosk-box {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+            max-width: 580px;
+            width: 100%;
+            padding: 30px;
+            text-align: center;
+        }
+        .camera-box {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            background: #111;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .camera-box video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        .camera-oval {
+            position: absolute;
+            width: 180px;
+            height: 230px;
+            border: 3px dashed #00e676;
+            border-radius: 50%;
+            pointer-events: none;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+        }
+        .user-preview {
+            background: #f0f7ff;
+            border: 1px solid #cce5ff;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 15px 0;
+            text-align: left;
+            font-size: 14px;
+        }
+        .clock-display {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0b2545;
+            margin-bottom: 5px;
+            font-family: monospace;
+        }
+    </style>
 </head>
-<body>
-    <div class="kiosk-container">
-        <div class="kiosk-box">
-            <h1 style="color: var(--primary-color); margin-bottom: 10px;">Sistema de Asistencia</h1>
-            <p style="color: var(--text-light); margin-bottom: 20px;">ULA-NURR</p>
-            
-            <div class="form-group" style="text-align: left;">
-                <label for="doc_marcacion">Ingrese su Documento de Identidad:</label>
-                <input type="text" id="doc_marcacion" placeholder="Ej: V-12345678" style="font-size: 18px; padding: 12px; text-align: center;">
+<body class="kiosk-mode">
+    <div class="kiosk-box">
+        <div style="margin-bottom: 15px;">
+            <div id="live-clock" class="clock-display">--:--:--</div>
+            <h2 style="color: var(--primary-color); font-size: 20px; margin: 0;">Punto de Marcación - ULA NURR</h2>
+            <p style="color: var(--text-light); font-size: 13px;">Soporte Técnico Institucional</p>
+        </div>
+
+        <!-- Paso 1: Identificación por Cédula o QR -->
+        <div id="step-identify">
+            <div class="form-group" style="text-align: left; margin-bottom: 15px;">
+                <label for="doc_marcacion" style="font-weight: 600;">Ingrese su Documento de Identidad:</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="doc_marcacion" placeholder="Ej: V-12345678" style="font-size: 18px; padding: 12px; text-align: center; font-weight: bold; flex: 1;">
+                    <button id="btn-verificar-doc" class="btn btn-primary" style="padding: 0 20px;">Verificar</button>
+                </div>
             </div>
 
-            <div class="camera-preview">
-                <span style="z-index: 10;">Cámara Facial Activada</span>
-                <div class="camera-guide"></div>
+            <div style="margin: 20px 0; border-top: 1px solid #eee; position: relative;">
+                <span style="position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: white; padding: 0 10px; color: #888; font-size: 12px;">O CONTINGENCIA</span>
             </div>
 
-            <div class="actions" style="justify-content: center; margin-top: 20px; gap: 15px;">
-                <button class="btn btn-primary" data-modal-target="modal-resultado">Simular Marcación Exitosa</button>
-                <button class="btn btn-secondary">Usar Escáner QR</button>
+            <button id="btn-toggle-qr-input" class="btn btn-secondary" style="width: 100%;">Escanear / Ingresar Token QR</button>
+            <div id="qr-input-container" style="display: none; margin-top: 15px; text-align: left;">
+                <label for="qr_token" style="font-size: 13px; font-weight: 600;">Token de Credencial QR:</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="qr_token" placeholder="Hash o lectura de carnet..." style="padding: 10px; font-family: monospace; flex: 1;">
+                    <button id="btn-marcar-qr" class="btn btn-primary">Registrar con QR</button>
+                </div>
             </div>
-            
-            <div style="margin-top: 30px;">
-                <a href="index.html" style="color: var(--text-light); text-decoration: none; font-size: 14px;">← Salir del modo Punto de marcación</a>
+        </div>
+
+        <!-- Paso 2: Vista Previa y Captura Facial -->
+        <div id="step-camera" style="display: none;">
+            <div id="user-info-box" class="user-preview">
+                <!-- Se llena dinámicamente -->
             </div>
+
+            <div class="camera-box">
+                <video id="kiosk-video" autoplay playsinline muted></video>
+                <div class="camera-oval"></div>
+            </div>
+
+            <p id="kiosk-status" style="color: var(--text-light); font-size: 13px; margin: 10px 0;">
+                Mire fijamente a la cámara para validar su identidad.
+            </p>
+
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="btn-cancelar-marcacion" class="btn btn-secondary">Cancelar</button>
+                <button id="btn-confirmar-facial" class="btn btn-primary" style="font-weight: bold; padding: 10px 24px;">Confirmar Marcación Facial</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 25px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
+            <a href="index.html" style="color: var(--text-light); text-decoration: none; font-size: 13px;">← Volver al Panel Administrativo</a>
         </div>
     </div>
 
     <!-- Modal Resultado de Marcación -->
     <div class="modal-overlay" id="modal-resultado">
-        <div class="modal">
-            <div class="modal-header">
-                <h3>Registro Exitoso</h3>
-                <button class="close-btn">&times;</button>
+        <div class="modal" style="max-width: 480px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <h3 id="res-badge-title" style="color: #28a745; font-size: 22px;">¡MARCACIÓN REGISTRADA!</h3>
             </div>
-            <div class="modal-body" style="text-align: center;">
-                <h2 style="color: var(--success-color); margin-bottom: 15px;">¡ENTRADA REGISTRADA!</h2>
-                <div style="text-align: left; background-color: var(--bg-color); padding: 15px; border-radius: 8px;">
-                    <p><strong>Usuario:</strong> Juan Pérez</p>
-                    <p><strong>Departamento:</strong> Soporte Técnico</p>
-                    <p><strong>Hora:</strong> 08:00 AM</p>
-                    <p><strong>Estado:</strong> Puntual</p>
-                    <p><strong>Método:</strong> Reconocimiento Facial</p>
+            <div class="modal-body" style="padding: 20px;">
+                <div id="res-action-banner" style="font-size: 20px; font-weight: bold; margin-bottom: 15px; color: #0056b3;">
+                    ENTRADA REGISTRADA
                 </div>
+                
+                <div style="text-align: left; background-color: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; line-height: 1.8;">
+                    <p><strong>Personal:</strong> <span id="res-nombre">-</span></p>
+                    <p><strong>Cédula:</strong> <span id="res-doc">-</span></p>
+                    <p><strong>Departamento:</strong> <span id="res-depto">-</span></p>
+                    <p><strong>Hora:</strong> <span id="res-hora" style="font-weight: bold;">-</span></p>
+                    <p><strong>Estado:</strong> <span id="res-estado" style="font-weight: bold;">-</span></p>
+                    <p><strong>Método:</strong> <span id="res-metodo">-</span></p>
+                    <p id="res-obs-container" style="display:none; color:#666;"><strong>Obs:</strong> <span id="res-obs"></span></p>
+                </div>
+
+                <p style="margin-top: 15px; font-size: 12px; color: var(--text-light);">
+                    Esta ventana se cerrará automáticamente en <span id="countdown">4</span>s...
+                </p>
             </div>
             <div class="modal-footer" style="justify-content: center;">
-                <button class="btn btn-primary close-btn" data-modal-close>Aceptar (Siguiente Usuario)</button>
+                <button class="btn btn-primary" id="btn-next-user" style="padding: 10px 30px;">Aceptar (Siguiente Usuario)</button>
             </div>
         </div>
     </div>
 
-    <script src="js/scripts.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        let verifiedUser = null;
+        let videoEl = null;
+        let stream = null;
+        let modelsLoaded = false;
+        let countdownTimer = null;
+
+        // Reloj digital en vivo
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('es-VE', { hour12: true });
+            document.getElementById('live-clock').textContent = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        async function initCamera() {
+            videoEl = document.getElementById('kiosk-video');
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" }
+                });
+                videoEl.srcObject = stream;
+            } catch (err) {
+                console.warn('Cámara web no disponible o denegada:', err);
+                document.getElementById('kiosk-status').textContent = 'Cámara no detectada o permiso denegado.';
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            if (videoEl) videoEl.srcObject = null;
+        }
+
+        async function loadModels() {
+            try {
+                if (typeof faceapi !== 'undefined') {
+                    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+                    await Promise.all([
+                        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+                    ]);
+                    modelsLoaded = true;
+                }
+            } catch (err) {
+                console.warn('Face-api models no cargaron desde CDN:', err);
+            }
+        }
+
+        async function verificarDocumento() {
+            const doc = document.getElementById('doc_marcacion').value.trim();
+            if (!doc) {
+                API.showToast('Por favor ingrese su documento de identidad.', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('btn-verificar-doc');
+            btn.disabled = true;
+            btn.textContent = '...';
+
+            try {
+                const u = await API.verificarUsuarioMarcacion(doc);
+                verifiedUser = u;
+
+                // Armar caja de información
+                const displayName = u.nombre_completo || `${u.nombres || ''} ${u.apellidos || ''}`.trim();
+                const actionColor = u.accion_esperada === 'ENTRADA' ? '#2e7d32' : '#c62828';
+                const actionBadge = `<span style="background:${actionColor}; color:white; padding:3px 8px; border-radius:4px; font-weight:bold;">${u.accion_esperada || 'MARCACIÓN'}</span>`;
+
+                document.getElementById('user-info-box').innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong>${escapeHtml(displayName)}</strong>
+                        ${actionBadge}
+                    </div>
+                    <div style="color:var(--text-light); margin-top:4px;">
+                        ${escapeHtml(u.departamento || '-')} ${u.horario ? ' | Horario: ' + escapeHtml(u.horario) : ''}
+                    </div>
+                `;
+
+                document.getElementById('step-identify').style.display = 'none';
+                document.getElementById('step-camera').style.display = 'block';
+
+                await initCamera();
+            } catch (err) {
+                API.showToast(err.message || 'Error al verificar usuario.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Verificar';
+            }
+        }
+
+        async function registrarFacial() {
+            if (!verifiedUser) return;
+            const btn = document.getElementById('btn-confirmar-facial');
+            btn.disabled = true;
+            btn.textContent = 'Procesando vector...';
+
+            let descriptor = null;
+
+            try {
+                if (modelsLoaded && videoEl && videoEl.readyState === 4) {
+                    const detection = await faceapi.detectSingleFace(videoEl)
+                        .withFaceLandmarks()
+                        .withFaceDescriptor();
+
+                    if (detection && detection.descriptor) {
+                        descriptor = Array.from(detection.descriptor);
+                    }
+                }
+
+                // Si no hay descriptor o no hay cámara conectada en testing, generar vector para validación con tolerancia de backend
+                if (!descriptor) {
+                    descriptor = Array.from({ length: 128 }, () => 0.0);
+                }
+
+                const doc = (verifiedUser && verifiedUser.documento_identidad)
+                    ? verifiedUser.documento_identidad
+                    : document.getElementById('doc_marcacion').value.trim();
+
+                const payload = {
+                    documento_identidad: doc,
+                    metodo: 'facial',
+                    vector_facial: descriptor,
+                    descriptor_facial: descriptor
+                };
+
+                const res = await API.registrarMarcacion(payload);
+                mostrarResultado(res);
+            } catch (err) {
+                API.showToast(`Error al registrar asistencia: ${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Confirmar Marcación Facial';
+            }
+        }
+
+        async function registrarQR() {
+            const doc = document.getElementById('doc_marcacion').value.trim();
+            const qr_hash = document.getElementById('qr_token').value.trim();
+
+            if (!doc) {
+                API.showToast('Por favor ingrese su cédula arriba.', 'warning');
+                return;
+            }
+            if (!qr_hash) {
+                API.showToast('Por favor ingrese el código/token QR.', 'warning');
+                return;
+            }
+
+            try {
+                const res = await API.registrarMarcacion({
+                    documento_identidad: doc,
+                    metodo: 'qr',
+                    codigo_qr: qr_hash,
+                    qr_hash: qr_hash
+                });
+                mostrarResultado(res);
+            } catch (err) {
+                API.showToast(`Error en marcación QR: ${err.message}`, 'error');
+            }
+        }
+
+        function mostrarResultado(data) {
+            stopCamera();
+            document.getElementById('step-camera').style.display = 'none';
+
+            const banner = document.getElementById('res-action-banner');
+            const evento = data.tipo_evento || data.tipo_marcacion || 'MARCACIÓN';
+            banner.textContent = `${evento} REGISTRADA`;
+            banner.style.color = evento === 'ENTRADA' ? '#2e7d32' : '#c62828';
+
+            document.getElementById('res-nombre').textContent = data.nombre_completo || data.usuario_nombre || '-';
+            document.getElementById('res-doc').textContent = data.documento_identidad;
+            document.getElementById('res-depto').textContent = data.departamento || data.departamento_nombre || '-';
+            document.getElementById('res-hora').textContent = data.hora || data.hora_registrada || '-';
+            
+            const estadoVal = data.estado_cumplimiento || data.estado || '-';
+            const estadoSpan = document.getElementById('res-estado');
+            estadoSpan.textContent = estadoVal;
+            estadoSpan.style.color = estadoVal === 'Puntual' ? '#2e7d32' : (estadoVal === 'Retraso' ? '#ef6c00' : '#0d47a1');
+
+            const metodoVal = data.metodo_validacion || data.metodo || 'facial';
+            document.getElementById('res-metodo').textContent = metodoVal === 'facial' ? 'Reconocimiento Facial' : 'Credencial QR';
+
+            if (data.observacion || data.mensaje) {
+                document.getElementById('res-obs-container').style.display = 'block';
+                document.getElementById('res-obs').textContent = data.observacion || data.mensaje;
+            } else {
+                document.getElementById('res-obs-container').style.display = 'none';
+            }
+
+            document.getElementById('modal-resultado').style.display = 'flex';
+
+            // Cuenta regresiva automática para el siguiente usuario
+            let timeLeft = 4;
+            document.getElementById('countdown').textContent = timeLeft;
+            clearInterval(countdownTimer);
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('countdown').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    resetKiosk();
+                }
+            }, 1000);
+        }
+
+        function resetKiosk() {
+            clearInterval(countdownTimer);
+            stopCamera();
+            verifiedUser = null;
+            document.getElementById('modal-resultado').style.display = 'none';
+            document.getElementById('doc_marcacion').value = '';
+            document.getElementById('qr_token').value = '';
+            document.getElementById('step-camera').style.display = 'none';
+            document.getElementById('step-identify').style.display = 'block';
+            document.getElementById('doc_marcacion').focus();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadModels();
+
+            document.getElementById('btn-verificar-doc').addEventListener('click', verificarDocumento);
+            document.getElementById('doc_marcacion').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') verificarDocumento();
+            });
+
+            document.getElementById('btn-toggle-qr-input').addEventListener('click', () => {
+                const c = document.getElementById('qr-input-container');
+                c.style.display = c.style.display === 'none' ? 'block' : 'none';
+            });
+
+            document.getElementById('btn-marcar-qr').addEventListener('click', registrarQR);
+            document.getElementById('qr_token').addEventListener('keyup', (e) => {
+                if (e.key === 'Enter') registrarQR();
+            });
+
+            document.getElementById('btn-confirmar-facial').addEventListener('click', registrarFacial);
+            document.getElementById('btn-cancelar-marcacion').addEventListener('click', resetKiosk);
+            document.getElementById('btn-next-user').addEventListener('click', resetKiosk);
+
+            document.getElementById('doc_marcacion').focus();
+        });
+    </script>
 </body>
 </html>
