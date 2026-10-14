@@ -56,11 +56,11 @@
                         <label for="filtro-estado">Estado:</label>
                         <select id="filtro-estado">
                             <option value="">Todos los estados</option>
-                            <option value="Puntual">Puntual</option>
-                            <option value="Retraso">Retraso</option>
-                            <option value="Anticipada">Anticipada</option>
-                            <option value="Incompleto">Incompleto</option>
-                            <option value="Abandono de jornada">Abandono de jornada</option>
+                            <option value="puntual">Puntual</option>
+                            <option value="retraso">Retraso</option>
+                            <option value="anticipada">Anticipada</option>
+                            <option value="incompleto">Incompleto</option>
+                            <option value="pendiente">Pendiente</option>
                         </select>
                     </div>
                     <div style="display: flex; gap: 8px;">
@@ -142,7 +142,7 @@
 
                 const data = await API.request(url);
                 currentPage = data.page;
-                totalPages = data.pages || 1;
+                totalPages = data.total_pages || 1;
 
                 document.getElementById('pg-info').textContent = `Página ${currentPage} de ${totalPages}`;
                 document.getElementById('pg-first').disabled = currentPage <= 1;
@@ -157,24 +157,28 @@
 
                 tbody.innerHTML = data.items.map(row => {
                     const statusClass = {
-                        'Puntual': 'text-success',
-                        'Retraso': 'text-warning',
-                        'Anticipada': 'text-info',
-                        'Incompleto': 'text-danger',
-                        'Abandono de jornada': 'text-danger'
-                    }[row.estado] || '';
+                        'puntual': 'text-success',
+                        'retraso': 'text-warning',
+                        'anticipada': 'text-info',
+                        'incompleto': 'text-danger',
+                        'pendiente': 'text-muted'
+                    }[row.estado_cumplimiento] || '';
+
+                    const corregidoBadge = row.fue_corregido
+                        ? ` <span class="badge" style="background:#e8eaf6; color:#283593; font-size:11px; padding:2px 5px; border-radius:3px;">Auditado</span>`
+                        : '';
 
                     return `
                         <tr>
                             <td><strong>${escapeHtml(row.fecha)}</strong></td>
-                            <td>${escapeHtml(row.usuario_nombre)}</td>
-                            <td>${escapeHtml(row.documento_identidad)}</td>
-                            <td>${escapeHtml(row.departamento_nombre || '-')}</td>
-                            <td>${escapeHtml(row.hora_entrada ? row.hora_entrada.substring(0, 5) : '-')}</td>
-                            <td>${escapeHtml(row.hora_salida ? row.hora_salida.substring(0, 5) : '-')}</td>
-                            <td><span style="font-size: 12px; text-transform: uppercase;">${escapeHtml(row.metodo_marcacion)}</span></td>
-                            <td>${row.horas_trabajadas != null ? row.horas_trabajadas.toFixed(2) + ' h' : '-'}</td>
-                            <td><span class="${statusClass}" style="font-weight: 600;">${escapeHtml(row.estado)}</span></td>
+                            <td>${escapeHtml(row.nombre_completo || '-')}</td>
+                            <td>${escapeHtml(row.documento_identidad || '-')}</td>
+                            <td>${escapeHtml(row.departamento || '-')}</td>
+                            <td>${escapeHtml(row.hora_entrada || '-')}</td>
+                            <td>${escapeHtml(row.hora_salida || '-')}</td>
+                            <td><span style="font-size: 12px; text-transform: uppercase;">${escapeHtml(row.metodo_validacion || '-')}</span></td>
+                            <td>${row.horas_trabajadas != null ? Number(row.horas_trabajadas).toFixed(2) + ' h' : '-'}</td>
+                            <td><span class="${statusClass}" style="font-weight: 600; text-transform: capitalize;">${escapeHtml(row.estado_cumplimiento)}</span>${corregidoBadge}</td>
                         </tr>
                     `;
                 }).join('');
@@ -191,7 +195,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const user = API.getUser();
             if (user) {
-                document.getElementById('user-display').textContent = `${user.nombres} (${user.rol})`;
+                document.getElementById('user-display').textContent = `${user.nombre_completo || user.nombres || ''} (${user.rol || 'Usuario'})`;
             }
 
             await loadDepartamentos();

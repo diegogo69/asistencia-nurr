@@ -68,6 +68,14 @@ def check_documento(
         mensaje="Documento de identidad disponible para registro."
     )
 
+@router.get("/roles/all", summary="Listar roles del sistema")
+def list_roles(
+    db: Session = Depends(get_db),
+    admin: Usuario = Depends(get_current_admin)
+):
+    roles = db.query(Rol).order_by(Rol.id.asc()).all()
+    return [{"id": r.id, "nombre": r.nombre, "requiere_password": r.requiere_password} for r in roles]
+
 @router.get("", response_model=UsuarioListResponse, summary="Listar usuarios")
 def list_usuarios(
     q: Optional[str] = Query(None, description="Búsqueda por documento, nombre o apellido"),
@@ -223,6 +231,24 @@ def update_usuario(
     db.refresh(usuario)
     return format_usuario_response(usuario)
 
+@router.patch("/{id}/toggle-status", response_model=UsuarioResponse, summary="Alternar estado activo/inactivo de usuario")
+def toggle_usuario_status(
+    id: int,
+    db: Session = Depends(get_db),
+    admin: Usuario = Depends(get_current_admin)
+):
+    usuario = db.query(Usuario).filter(Usuario.id == id).first()
+    if not usuario:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+
+    if usuario.id == admin.id and usuario.activo:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No puede inhabilitar su propia cuenta activa.")
+
+    usuario.activo = not usuario.activo
+    db.commit()
+    db.refresh(usuario)
+    return format_usuario_response(usuario)
+
 @router.delete("/{id}", summary="Eliminar o desactivar usuario (inmutabilidad)")
 def delete_usuario(
     id: int,
@@ -239,6 +265,11 @@ def delete_usuario(
     # Regla de inmutabilidad: verificar si tiene registros en asistencias
     total_asistencias = db.query(Asistencia).filter(Asistencia.usuario_id == id).count()
     if total_asistencias > 0:
+        if not usuario.activo:
+            return {
+                "tipo_borrado": "inactivo",
+                "message": f"El usuario posee {total_asistencias} registros de asistencia históricos. Para preservar la auditoría legal de la institución, no puede ser eliminado físicamente; la cuenta ya se encuentra inhabilitada."
+            }
         # Borrado lógico
         usuario.activo = False
         db.commit()

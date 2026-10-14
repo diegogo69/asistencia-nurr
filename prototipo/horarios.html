@@ -129,12 +129,13 @@
     <script src="js/scripts.js"></script>
     <script>
         const DIAS = [
-            { id: 0, nombre: 'Lunes' },
-            { id: 1, nombre: 'Martes' },
-            { id: 2, nombre: 'Miércoles' },
-            { id: 3, nombre: 'Jueves' },
-            { id: 4, nombre: 'Viernes' },
-            { id: 5, nombre: 'Sábado' }
+            { id: 1, nombre: 'Lunes' },
+            { id: 2, nombre: 'Martes' },
+            { id: 3, nombre: 'Miércoles' },
+            { id: 4, nombre: 'Jueves' },
+            { id: 5, nombre: 'Viernes' },
+            { id: 6, nombre: 'Sábado' },
+            { id: 7, nombre: 'Domingo' }
         ];
 
         let currentPage = 1;
@@ -142,11 +143,11 @@
 
         function renderBloquesInputs(bloques = []) {
             const container = document.getElementById('bloques-dias-container');
-            container.innerHTML = DIAS.map(d => {
+            container.innerHTML = DIAS.slice(0, 6).map(d => {
                 const b = bloques.find(item => item.dia_semana === d.id);
-                const activo = !!b || (d.id < 5 && bloques.length === 0);
-                const entrada = b ? b.hora_entrada : '08:00';
-                const salida = b ? b.hora_salida : '15:00';
+                const activo = !!b || (d.id <= 5 && bloques.length === 0);
+                const entrada = b ? (b.hora_entrada.length > 5 ? b.hora_entrada.substring(0, 5) : b.hora_entrada) : '08:00';
+                const salida = b ? (b.hora_salida.length > 5 ? b.hora_salida.substring(0, 5) : b.hora_salida) : '13:00';
 
                 return `
                     <div style="display: grid; grid-template-columns: 80px 100px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 8px;">
@@ -178,9 +179,9 @@
 
                 const data = await API.request(url);
                 currentPage = data.page;
-                totalPages = data.pages || 1;
+                totalPages = data.total_pages || 1;
 
-                document.getElementById('pg-info').textContent = `Página ${currentPage} de ${totalPages}`;
+                document.getElementById('pg-info').textContent = `Página ${currentPage} de ${totalPages} (Total: ${data.total || 0})`;
                 document.getElementById('pg-first').disabled = currentPage <= 1;
                 document.getElementById('pg-prev').disabled = currentPage <= 1;
                 document.getElementById('pg-next').disabled = currentPage >= totalPages;
@@ -193,10 +194,13 @@
 
                 tbody.innerHTML = data.items.map(h => {
                     let descBloques = '-';
-                    if (h.tipo === 'fijo' && h.bloques_fijos) {
-                        descBloques = h.bloques_fijos.map(b => {
+                    const listBloques = h.detalles || h.bloques_fijos || [];
+                    if (h.tipo === 'fijo' && listBloques.length > 0) {
+                        descBloques = listBloques.map(b => {
                             const diaNombre = DIAS.find(d => d.id === b.dia_semana)?.nombre || `Día ${b.dia_semana}`;
-                            return `${diaNombre}: ${b.hora_entrada.substring(0,5)}-${b.hora_salida.substring(0,5)}`;
+                            const ent = b.hora_entrada ? b.hora_entrada.substring(0, 5) : '';
+                            const sal = b.hora_salida ? b.hora_salida.substring(0, 5) : '';
+                            return `${diaNombre}: ${ent}-${sal}`;
                         }).join(' | ');
                     } else if (h.tipo === 'flexible') {
                         descBloques = 'Cumplimiento libre de horas semanales';
@@ -210,13 +214,13 @@
                                     ${h.tipo.toUpperCase()}
                                 </span>
                             </td>
-                            <td>${h.horas_requeridas_semana} hrs/sem</td>
+                            <td>${h.horas_requeridas || h.horas_requeridas_semana || 0} hrs/sem</td>
                             <td style="font-size: 13px; color: var(--text-light); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(descBloques)}">
                                 ${escapeHtml(descBloques)}
                             </td>
                             <td class="actions">
                                 <button class="btn btn-secondary btn-icon" onclick='openEditModal(${JSON.stringify(h).replace(/'/g, "&apos;")})'>Editar</button>
-                                <button class="btn btn-danger btn-icon" onclick="deleteHorario(${h.id})">Eliminar</button>
+                                <button class="btn btn-danger btn-icon" onclick="deleteHorario(${h.id}, '${escapeAttr(h.nombre)}')">Eliminar</button>
                             </td>
                         </tr>
                     `;
@@ -231,12 +235,17 @@
             return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
         }
 
+        function escapeAttr(str) {
+            if (!str) return '';
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
         function openAddModal() {
             document.getElementById('modal-title').textContent = 'Agregar Plantilla de Horario';
             document.getElementById('edit-id').value = '';
             document.getElementById('nombre_horario').value = '';
             document.getElementById('tipo_horario').value = 'fijo';
-            document.getElementById('horas_requeridas').value = '35';
+            document.getElementById('horas_requeridas').value = '15';
             document.getElementById('matriz_fijo').style.display = 'block';
             renderBloquesInputs([]);
             document.getElementById('modal-horario').style.display = 'flex';
@@ -247,14 +256,14 @@
             document.getElementById('edit-id').value = h.id;
             document.getElementById('nombre_horario').value = h.nombre;
             document.getElementById('tipo_horario').value = h.tipo;
-            document.getElementById('horas_requeridas').value = h.horas_requeridas_semana;
+            document.getElementById('horas_requeridas').value = h.horas_requeridas || h.horas_requeridas_semana || 0;
             document.getElementById('matriz_fijo').style.display = h.tipo === 'fijo' ? 'block' : 'none';
-            renderBloquesInputs(h.bloques_fijos || []);
+            renderBloquesInputs(h.detalles || h.bloques_fijos || []);
             document.getElementById('modal-horario').style.display = 'flex';
         }
 
-        async function deleteHorario(id) {
-            if (!confirm('¿Está seguro de eliminar esta plantilla de horarios? No debe tener usuarios asociados.')) {
+        async function deleteHorario(id, nombre) {
+            if (!confirm(`¿Está seguro de eliminar la plantilla de horario '${nombre}'? No debe tener usuarios asociados.`)) {
                 return;
             }
             try {
@@ -269,7 +278,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const user = API.getUser();
             if (user) {
-                document.getElementById('user-display').textContent = `${user.nombres} (${user.rol})`;
+                document.getElementById('user-display').textContent = `${user.nombre_completo || user.nombres || 'Admin'} (${user.rol || 'Coordinador'})`;
             }
 
             document.getElementById('tipo_horario').addEventListener('change', function() {
@@ -292,17 +301,19 @@
                 const editId = document.getElementById('edit-id').value;
                 const nombre = document.getElementById('nombre_horario').value.trim();
                 const tipo = document.getElementById('tipo_horario').value;
-                const horas_requeridas_semana = parseFloat(document.getElementById('horas_requeridas').value);
+                const horas_requeridas = parseInt(document.getElementById('horas_requeridas').value) || 0;
 
-                const bloques_fijos = [];
+                const detalles = [];
                 if (tipo === 'fijo') {
                     DIAS.forEach(d => {
                         const chk = document.getElementById(`chk_dia_${d.id}`);
                         if (chk && chk.checked) {
-                            const entrada = document.getElementById(`entrada_dia_${d.id}`).value;
-                            const salida = document.getElementById(`salida_dia_${d.id}`).value;
+                            let entrada = document.getElementById(`entrada_dia_${d.id}`).value;
+                            let salida = document.getElementById(`salida_dia_${d.id}`).value;
                             if (entrada && salida) {
-                                bloques_fijos.push({
+                                if (entrada.length === 5) entrada += ':00';
+                                if (salida.length === 5) salida += ':00';
+                                detalles.push({
                                     dia_semana: d.id,
                                     hora_entrada: entrada,
                                     hora_salida: salida
@@ -311,7 +322,7 @@
                         }
                     });
 
-                    if (bloques_fijos.length === 0) {
+                    if (detalles.length === 0) {
                         API.showToast('Debe seleccionar al menos un día con horario de entrada y salida para turnos fijos.', 'warning');
                         return;
                     }
@@ -320,8 +331,8 @@
                 const payload = {
                     nombre,
                     tipo,
-                    horas_requeridas_semana,
-                    bloques_fijos
+                    horas_requeridas,
+                    detalles
                 };
 
                 try {
