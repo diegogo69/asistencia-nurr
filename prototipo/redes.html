@@ -123,9 +123,9 @@
 
                 const data = await API.request(url);
                 currentPage = data.page;
-                totalPages = data.pages || 1;
+                totalPages = data.total_pages || 1;
 
-                document.getElementById('pg-info').textContent = `Página ${currentPage} de ${totalPages}`;
+                document.getElementById('pg-info').textContent = `Página ${currentPage} de ${totalPages} (Total: ${data.total || 0})`;
                 document.getElementById('pg-first').disabled = currentPage <= 1;
                 document.getElementById('pg-prev').disabled = currentPage <= 1;
                 document.getElementById('pg-next').disabled = currentPage >= totalPages;
@@ -138,7 +138,7 @@
 
                 tbody.innerHTML = data.items.map(r => `
                     <tr>
-                        <td><strong>${escapeHtml(r.ip_o_cidr)}</strong></td>
+                        <td><strong>${escapeHtml(r.direccion_ip || r.ip_o_cidr)}</strong></td>
                         <td>${escapeHtml(r.descripcion || '-')}</td>
                         <td>
                             <span class="${r.activo ? 'text-success' : 'text-danger'}" style="font-weight: 600;">
@@ -146,7 +146,7 @@
                             </span>
                         </td>
                         <td class="actions">
-                            <button class="btn btn-secondary btn-icon" onclick="openEditModal(${r.id}, '${escapeAttr(r.ip_o_cidr)}', '${escapeAttr(r.descripcion || '')}', ${r.activo})">Editar</button>
+                            <button class="btn btn-secondary btn-icon" onclick="openEditModal(${r.id}, '${escapeAttr(r.direccion_ip || r.ip_o_cidr)}', '${escapeAttr(r.descripcion || '')}', ${r.activo})">Editar</button>
                             <button class="btn btn-secondary btn-icon" onclick="toggleRed(${r.id})">${r.activo ? 'Desactivar' : 'Activar'}</button>
                             <button class="btn btn-danger btn-icon" onclick="deleteRed(${r.id})">Eliminar</button>
                         </td>
@@ -187,7 +187,7 @@
 
         async function toggleRed(id) {
             try {
-                await API.request(`/redes/${id}/toggle`, { method: 'PATCH' });
+                await API.request(`/redes/${id}/toggle-status`, { method: 'PATCH' });
                 API.showToast('Estado de la red actualizado correctamente.', 'success');
                 loadRedes(currentPage);
             } catch (err) {
@@ -211,7 +211,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const user = API.getUser();
             if (user) {
-                document.getElementById('user-display').textContent = `${user.nombres} (${user.rol})`;
+                document.getElementById('user-display').textContent = `${user.nombre_completo || user.nombres || 'Admin'} (${user.rol || 'Coordinador'})`;
             }
 
             document.getElementById('btn-add-red').addEventListener('click', openAddModal);
@@ -228,11 +228,11 @@
             document.getElementById('form-red').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const editId = document.getElementById('edit-id').value;
-                const ip_o_cidr = document.getElementById('ip_o_cidr').value.trim();
+                const direccion_ip = document.getElementById('ip_o_cidr').value.trim();
                 const descripcion = document.getElementById('descripcion').value.trim();
                 const activo = document.getElementById('activo').checked;
 
-                const payload = { ip_o_cidr, descripcion, activo };
+                const payload = { direccion_ip, descripcion, activo };
 
                 try {
                     if (editId) {

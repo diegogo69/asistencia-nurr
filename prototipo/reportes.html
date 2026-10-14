@@ -169,12 +169,19 @@
                 const q = getQueryParams();
                 const data = await API.request(`/reportes/resumen?${q}`);
                 
-                document.getElementById('met-total').textContent = data.total_registros;
-                document.getElementById('met-puntuales').textContent = data.puntuales;
-                document.getElementById('met-retrasos').textContent = data.retrasos;
-                document.getElementById('met-incompletos').textContent = data.incompletos;
-                document.getElementById('met-horas').textContent = data.total_horas_trabajadas.toFixed(1) + ' h';
-                document.getElementById('met-tasa').textContent = data.tasa_puntualidad.toFixed(1) + '%';
+                const total = data.total_marcaciones ?? data.total_registros ?? 0;
+                const puntuales = data.total_puntuales ?? data.puntuales ?? 0;
+                const retrasos = data.total_retrasos ?? data.retrasos ?? 0;
+                const incompletos = data.total_incompletos ?? data.incompletos ?? 0;
+                const horas = data.total_horas_acumuladas ?? data.total_horas_trabajadas ?? 0;
+                const tasa = total > 0 ? ((puntuales / total) * 100) : 0;
+
+                document.getElementById('met-total').textContent = total;
+                document.getElementById('met-puntuales').textContent = puntuales;
+                document.getElementById('met-retrasos').textContent = retrasos;
+                document.getElementById('met-incompletos').textContent = incompletos;
+                document.getElementById('met-horas').textContent = (typeof horas === 'number' ? horas.toFixed(1) : horas) + ' h';
+                document.getElementById('met-tasa').textContent = tasa.toFixed(1) + '%';
 
                 document.getElementById('metricas-panel').style.display = 'block';
                 API.showToast('Métricas consolidadas calculadas con éxito.', 'success');
@@ -227,7 +234,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const user = API.getUser();
             if (user) {
-                document.getElementById('user-display').textContent = `${user.nombres} (${user.rol})`;
+                document.getElementById('user-display').textContent = `${user.nombre_completo || user.nombres || ''} (${user.rol || 'Usuario'})`;
             }
 
             // Defaults: primer día del mes actual hasta hoy

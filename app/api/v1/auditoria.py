@@ -55,6 +55,8 @@ def format_resolucion(r: AsistenciaPendiente) -> AsistenciaPendienteResponse:
 def list_incompletas(
     page: int = Query(1, ge=1, description="Número de página"),
     limit: int = Query(10, ge=1, le=500, description="Elementos por página"),
+    fecha_desde: Optional[date] = Query(None, description="Fecha inicial del rango (YYYY-MM-DD)"),
+    fecha_hasta: Optional[date] = Query(None, description="Fecha final del rango (YYYY-MM-DD)"),
     db: Session = Depends(get_db),
     admin: Usuario = Depends(get_current_admin)
 ):
@@ -65,6 +67,11 @@ def list_incompletas(
             Asistencia.estado_cumplimiento.in_([EstadoCumplimiento.INCOMPLETO, EstadoCumplimiento.PENDIENTE])
         )
     )
+
+    if fecha_desde:
+        query = query.filter(Asistencia.fecha >= fecha_desde)
+    if fecha_hasta:
+        query = query.filter(Asistencia.fecha <= fecha_hasta)
 
     total = query.count()
     total_pages = ceil(total / limit) if total > 0 else 1

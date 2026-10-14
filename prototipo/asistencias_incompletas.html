@@ -100,16 +100,16 @@
                     <div class="form-group">
                         <label for="nuevo_estado">Nuevo Estado de Cumplimiento <span style="color:red">*</span></label>
                         <select id="nuevo_estado" required>
-                            <option value="Puntual">Puntual (Jornada completada según horario)</option>
-                            <option value="Retraso">Retraso</option>
-                            <option value="Anticipada">Salida Anticipada autorizada</option>
-                            <option value="Abandono de jornada">Abandono de jornada</option>
+                            <option value="puntual">Puntual (Jornada completada según horario)</option>
+                            <option value="retraso">Retraso (Entrada tardía subsanada)</option>
+                            <option value="anticipada">Salida Anticipada autorizada</option>
+                            <option value="incompleto">Incompleto (Falta no justificada / Abandono)</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
                         <label for="observacion">Observación / Justificación de Auditoría <span style="color:red">*</span></label>
-                        <textarea id="observacion" rows="4" placeholder="Indique la justificación formal, permiso o causa para esta resolución manual..." required minlength="5"></textarea>
+                        <textarea id="observacion" rows="4" placeholder="Indique la justificación formal, permiso o causa para esta resolución manual (mínimo 10 caracteres)..." required minlength="10"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -126,6 +126,18 @@
         let currentPage = 1;
         let totalPages = 1;
 
+        function calcularDiasPendiente(fechaStr) {
+            if (!fechaStr) return '-';
+            const parts = fechaStr.split('/');
+            if (parts.length === 3) {
+                const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+                const diffMs = Date.now() - d.getTime();
+                const dias = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
+                return dias;
+            }
+            return '-';
+        }
+
         async function loadIncompletas(page = 1) {
             const desde = document.getElementById('filter-desde').value;
             const hasta = document.getElementById('filter-hasta').value;
@@ -139,7 +151,7 @@
 
                 const data = await API.request(url);
                 currentPage = data.page;
-                totalPages = data.pages || 1;
+                totalPages = data.total_pages || 1;
 
                 document.getElementById('pg-info').textContent = `Página ${currentPage} de ${totalPages}`;
                 document.getElementById('pg-first').disabled = currentPage <= 1;
@@ -152,20 +164,23 @@
                     return;
                 }
 
-                tbody.innerHTML = data.items.map(item => `
+                tbody.innerHTML = data.items.map(item => {
+                    const dias = calcularDiasPendiente(item.fecha);
+                    return `
                     <tr>
                         <td><strong>${escapeHtml(item.fecha)}</strong></td>
-                        <td>${escapeHtml(item.usuario_nombre)}</td>
-                        <td>${escapeHtml(item.documento_identidad)}</td>
-                        <td>${escapeHtml(item.departamento_nombre || '-')}</td>
-                        <td>${escapeHtml(item.hora_entrada ? item.hora_entrada.substring(0, 5) : '-')}</td>
-                        <td><span style="color:#d32f2f; font-weight:bold;">${item.dias_pendiente} día(s)</span></td>
-                        <td><span class="badge" style="background-color:#ffebee; color:#c62828; padding:3px 6px; border-radius:4px; font-weight:600;">${escapeHtml(item.estado_actual)}</span></td>
+                        <td>${escapeHtml(item.nombre_completo || '-')}</td>
+                        <td>${escapeHtml(item.documento_identidad || '-')}</td>
+                        <td>${escapeHtml(item.departamento || '-')}</td>
+                        <td>${escapeHtml(item.hora_entrada || '-')}</td>
+                        <td><span style="color:#d32f2f; font-weight:bold;">${dias !== '-' ? dias + ' día(s)' : '-'}</span></td>
+                        <td><span class="badge" style="background-color:#ffebee; color:#c62828; padding:3px 6px; border-radius:4px; font-weight:600; text-transform:uppercase;">${escapeHtml(item.estado_cumplimiento)}</span></td>
                         <td class="actions">
                             <button class="btn btn-primary btn-icon" onclick='openResolveModal(${JSON.stringify(item).replace(/'/g, "&apos;")})'>Resolver</button>
                         </td>
                     </tr>
-                `).join('');
+                    `;
+                }).join('');
             } catch (err) {
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: red;">Error: ${err.message}</td></tr>`;
             }
@@ -177,13 +192,13 @@
         }
 
         function openResolveModal(item) {
-            document.getElementById('resolve-asistencia-id').value = item.asistencia_id;
-            document.getElementById('res-usuario').textContent = item.usuario_nombre;
-            document.getElementById('res-cedula').textContent = item.documento_identidad;
-            document.getElementById('res-fecha').textContent = item.fecha;
-            document.getElementById('res-entrada').textContent = item.hora_entrada ? item.hora_entrada.substring(0, 5) : '-';
+            document.getElementById('resolve-asistencia-id').value = item.id;
+            document.getElementById('res-usuario').textContent = item.nombre_completo || '-';
+            document.getElementById('res-cedula').textContent = item.documento_identidad || '-';
+            document.getElementById('res-fecha').textContent = item.fecha || '-';
+            document.getElementById('res-entrada').textContent = item.hora_entrada || '-';
             document.getElementById('hora_salida').value = '15:00';
-            document.getElementById('nuevo_estado').value = 'Puntual';
+            document.getElementById('nuevo_estado').value = 'puntual';
             document.getElementById('observacion').value = '';
             document.getElementById('modal-resolver').style.display = 'flex';
         }
@@ -195,7 +210,8 @@
 
             try {
                 const res = await API.request('/auditoria/ejecutar-deteccion', { method: 'POST' });
-                API.showToast(res.message || `Detección completada: ${res.detected_count} registro(s) detectado(s).`, 'success');
+                const count = res.registros_marcados_incompletos != null ? res.registros_marcados_incompletos : (res.detected_count || 0);
+                API.showToast(res.message || `Detección completada: ${count} registro(s) detectado(s).`, 'success');
                 loadIncompletas(1);
             } catch (err) {
                 API.showToast(`Error ejecutando detección: ${err.message}`, 'error');
@@ -208,7 +224,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const user = API.getUser();
             if (user) {
-                document.getElementById('user-display').textContent = `${user.nombres} (${user.rol})`;
+                document.getElementById('user-display').textContent = `${user.nombre_completo || user.nombres || ''} (${user.rol || 'Usuario'})`;
             }
 
             document.getElementById('btn-run-detection').addEventListener('click', runDetection);
@@ -222,14 +238,21 @@
             document.getElementById('form-resolver').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const asistencia_id = parseInt(document.getElementById('resolve-asistencia-id').value);
-                const hora_salida = document.getElementById('hora_salida').value;
+                let hora_salida = document.getElementById('hora_salida').value;
+                if (hora_salida && hora_salida.length === 5) {
+                    hora_salida = hora_salida + ':00';
+                }
                 const nuevo_estado = document.getElementById('nuevo_estado').value;
                 const observacion = document.getElementById('observacion').value.trim();
 
-                if (observacion.length < 5) {
-                    API.showToast('La justificación debe tener al menos 5 caracteres.', 'warning');
+                if (observacion.length < 10) {
+                    API.showToast('La justificación explicativa es obligatoria (mínimo 10 caracteres).', 'warning');
                     return;
                 }
+
+                const btnSubmit = document.getElementById('btn-save-resolve');
+                btnSubmit.disabled = true;
+                btnSubmit.textContent = 'Guardando...';
 
                 try {
                     await API.request('/auditoria/resolver', {
@@ -242,11 +265,14 @@
                         })
                     });
 
-                    API.showToast('Asistencia incompleta resuelta e imputada con éxito.', 'success');
+                    API.showToast('Inconsistencia resuelta y registrada en auditoría exitosamente.', 'success');
                     document.getElementById('modal-resolver').style.display = 'none';
                     loadIncompletas(currentPage);
                 } catch (err) {
-                    // Handled
+                    // API.showToast ya maneja el error
+                } finally {
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = 'Guardar Resolución';
                 }
             });
 
