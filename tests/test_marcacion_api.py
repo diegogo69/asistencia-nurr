@@ -105,3 +105,30 @@ def test_facial_recognition_mismatch():
     })
     assert res.status_code == 400
     assert "no tiene enrolado su vector" in res.json()["detail"]
+
+def test_marcacion_html_keyboard_shortcuts():
+    """Verifica que la página de marcación cargue correctamente y contenga los atajos de teclado requeridos."""
+    res = client.get("/static/marcacion.html")
+    assert res.status_code == 200
+    html = res.text
+
+    # 1. Presencia de los botones requeridos
+    assert 'id="btn-confirmar-facial"' in html
+    assert 'id="btn-cancelar-marcacion"' in html
+    assert "Confirmar Marcación Facial" in html
+    assert "Cancelar" in html
+
+    # 2. Presencia del manejador de teclado con Enter, Espacio y Esc
+    assert "keydown" in html
+    assert "'Enter'" in html
+    assert "'Space'" in html or "' '" in html
+    assert "'Escape'" in html or "'Esc'" in html
+
+    # 3. Vinculación con las acciones de Confirmar y Cancelar
+    assert "btn-confirmar-facial" in html
+    assert "btn-cancelar-marcacion" in html
+
+    # 4. Indicadores visuales de atajos de teclado para el usuario
+    assert "[Enter / Espacio]" in html
+    assert "[Esc]" in html
+
