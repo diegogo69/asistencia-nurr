@@ -101,9 +101,15 @@
                 <div class="modal-body">
                     <div class="grid-2">
                         <div class="form-group">
-                            <label for="doc_identidad">Documento de Identidad <span style="color:red">*</span></label>
-                            <input type="text" id="doc_identidad" placeholder="Ej: V-12345678" required>
-                            <small id="error_doc" style="color: var(--danger-color); display: none; margin-top: 4px; font-weight: 500;"></small>
+                            <label for="doc_numero">Documento de Identidad <span style="color:red">*</span></label>
+                            <div class="ci-input-group">
+                                <select id="doc_tipo" class="ci-select" aria-label="Identificador">
+                                    <option value="V" selected>V</option>
+                                    <option value="E">E</option>
+                                </select>
+                                <input type="text" id="doc_numero" class="ci-number" placeholder="Ej: 12345678" inputmode="numeric" pattern="[0-9]*" maxlength="8" required>
+                            </div>
+                            <small id="error_doc" class="ci-error"></small>
                         </div>
                         <div class="form-group">
                             <label for="email">Correo Institucional / Personal</label>
@@ -300,11 +306,13 @@
             return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
         }
 
+        let userCedulaCtrl = null;
+
         function openAddModal() {
             document.getElementById('modal-title').textContent = 'Agregar Nuevo Usuario';
             document.getElementById('edit-id').value = '';
-            document.getElementById('doc_identidad').value = '';
-            document.getElementById('doc_identidad').disabled = false;
+            if (userCedulaCtrl) userCedulaCtrl.clear();
+            if (userCedulaCtrl) userCedulaCtrl.setDisabled(false);
             document.getElementById('error_doc').style.display = 'none';
             document.getElementById('nombres').value = '';
             document.getElementById('apellidos').value = '';
@@ -320,8 +328,8 @@
         function openEditModal(u) {
             document.getElementById('modal-title').textContent = 'Editar Expediente de Usuario';
             document.getElementById('edit-id').value = u.id;
-            document.getElementById('doc_identidad').value = u.documento_identidad;
-            document.getElementById('doc_identidad').disabled = false;
+            if (userCedulaCtrl) userCedulaCtrl.setValue(u.documento_identidad);
+            if (userCedulaCtrl) userCedulaCtrl.setDisabled(false);
             document.getElementById('error_doc').style.display = 'none';
             document.getElementById('nombres').value = u.nombre || u.nombres || '';
             document.getElementById('apellidos').value = u.apellido || u.apellidos || '';
@@ -335,26 +343,33 @@
         }
 
         async function checkDocUniqueness() {
-            const docInput = document.getElementById('doc_identidad');
-            const doc = docInput.value.trim();
+            if (!userCedulaCtrl) return;
+            const docNum = userCedulaCtrl.getNumero();
             const editId = document.getElementById('edit-id').value;
             const errSpan = document.getElementById('error_doc');
             const saveBtn = document.getElementById('btn_guardar_usr');
 
-            if (!doc) return;
+            if (!docNum) return;
+
+            if (!userCedulaCtrl.validate(false)) {
+                saveBtn.disabled = true;
+                return;
+            }
+
+            const docFormatted = userCedulaCtrl.getFormatted(false);
 
             try {
-                let url = `/usuarios/check-documento?documento=${encodeURIComponent(doc)}`;
+                let url = `/usuarios/check-documento?documento=${encodeURIComponent(docFormatted)}`;
                 if (editId) url += `&exclude_id=${editId}`;
 
                 const res = await API.request(url);
                 if (!res.disponible) {
-                    docInput.style.borderColor = 'red';
+                    userCedulaCtrl.inputElement.style.borderColor = 'var(--danger-color)';
                     errSpan.textContent = res.mensaje || 'El documento ya está registrado en el sistema.';
                     errSpan.style.display = 'block';
                     saveBtn.disabled = true;
                 } else {
-                    docInput.style.borderColor = '';
+                    userCedulaCtrl.inputElement.style.borderColor = '';
                     errSpan.style.display = 'none';
                     saveBtn.disabled = false;
                 }
@@ -408,7 +423,18 @@
 
             await loadDependencies();
 
-            document.getElementById('doc_identidad').addEventListener('blur', checkDocUniqueness);
+            userCedulaCtrl = API.initCedulaInput({
+                selectId: 'doc_tipo',
+                inputId: 'doc_numero',
+                errorId: 'error_doc',
+                allowAdminZero: false,
+                onChange: () => {
+                    document.getElementById('btn_guardar_usr').disabled = false;
+                }
+            });
+
+            document.getElementById('doc_numero').addEventListener('blur', checkDocUniqueness);
+            document.getElementById('doc_tipo').addEventListener('change', checkDocUniqueness);
             document.getElementById('btn-add-usuario').addEventListener('click', openAddModal);
             document.getElementById('btn-search').addEventListener('click', () => loadUsuarios(1));
             document.getElementById('filter-input').addEventListener('keyup', (e) => {
@@ -428,8 +454,10 @@
 
             document.getElementById('form-usuario').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                if (!userCedulaCtrl.validate(false)) return;
+
                 const editId = document.getElementById('edit-id').value;
-                const documento_identidad = document.getElementById('doc_identidad').value.trim();
+                const documento_identidad = userCedulaCtrl.getFormatted(false);
                 const nombre = document.getElementById('nombres').value.trim();
                 const apellido = document.getElementById('apellidos').value.trim();
                 const depVal = document.getElementById('departamento_id').value;

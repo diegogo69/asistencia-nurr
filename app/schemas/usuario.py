@@ -1,14 +1,22 @@
 from typing import Optional, List, Any
-from pydantic import BaseModel, Field, ConfigDict, model_validator
+from pydantic import BaseModel, Field, ConfigDict, model_validator, field_validator
+from app.core.documento import format_documento_identidad
 
 class UsuarioBase(BaseModel):
-    documento_identidad: str = Field(..., min_length=5, max_length=20, description="Cédula de identidad (ej: V-12345678)")
+    documento_identidad: str = Field(..., description="Cédula de identidad (ej: v-12345678)")
     nombre: str = Field(..., min_length=2, max_length=100, description="Nombres del usuario")
     apellido: str = Field(..., min_length=2, max_length=100, description="Apellidos del usuario")
     rol_id: int = Field(..., description="ID del rol asignado")
     departamento_id: int = Field(..., description="ID de la unidad organizacional asignada")
     horario_id: Optional[int] = Field(None, description="ID de la plantilla de horario asignada")
     activo: bool = Field(True, description="Estado de activación del usuario")
+
+    @field_validator("documento_identidad", mode="before")
+    @classmethod
+    def validate_and_format_documento(cls, v: Any) -> str:
+        if v is None:
+            raise ValueError("El documento de identidad es requerido.")
+        return format_documento_identidad(str(v))
 
     @model_validator(mode="before")
     @classmethod
@@ -28,7 +36,7 @@ class UsuarioCreate(UsuarioBase):
     password: Optional[str] = Field(None, min_length=4, description="Contraseña requerida si el rol tiene privilegios administrativos")
 
 class UsuarioUpdate(BaseModel):
-    documento_identidad: Optional[str] = Field(None, min_length=5, max_length=20)
+    documento_identidad: Optional[str] = None
     nombre: Optional[str] = Field(None, min_length=2, max_length=100)
     apellido: Optional[str] = Field(None, min_length=2, max_length=100)
     rol_id: Optional[int] = None
@@ -36,6 +44,13 @@ class UsuarioUpdate(BaseModel):
     horario_id: Optional[int] = None
     activo: Optional[bool] = None
     password: Optional[str] = Field(None, min_length=4)
+
+    @field_validator("documento_identidad", mode="before")
+    @classmethod
+    def validate_and_format_documento(cls, v: Any) -> Optional[str]:
+        if v is None or v == "":
+            return None
+        return format_documento_identidad(str(v))
 
     @model_validator(mode="before")
     @classmethod

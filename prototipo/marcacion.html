@@ -81,11 +81,18 @@
         <!-- Paso 1: Identificación por Cédula o QR -->
         <div id="step-identify">
             <div class="form-group" style="text-align: left; margin-bottom: 15px;">
-                <label for="doc_marcacion" style="font-weight: 600;">Ingrese su Documento de Identidad:</label>
+                <label for="doc_numero" style="font-weight: 600;">Ingrese su Documento de Identidad:</label>
                 <div style="display: flex; gap: 8px;">
-                    <input type="text" id="doc_marcacion" placeholder="Ej: V-12345678" style="font-size: 18px; padding: 12px; text-align: center; font-weight: bold; flex: 1;">
-                    <button id="btn-verificar-doc" class="btn btn-primary" style="padding: 0 20px;">Verificar</button>
+                    <div class="ci-input-group ci-large" style="flex: 1;">
+                        <select id="doc_tipo" class="ci-select" aria-label="Identificador">
+                            <option value="V" selected>V</option>
+                            <option value="E">E</option>
+                        </select>
+                        <input type="text" id="doc_numero" class="ci-number" placeholder="Ej: 12345678" inputmode="numeric" pattern="[0-9]*" maxlength="8" required autofocus>
+                    </div>
+                    <button id="btn-verificar-doc" class="btn btn-primary" style="padding: 0 24px; font-weight: bold; font-size: 16px;">Verificar</button>
                 </div>
+                <small id="doc_error" class="ci-error" style="font-size: 13px;"></small>
             </div>
 
             <div style="margin: 20px 0; border-top: 1px solid #eee; position: relative;">
@@ -213,12 +220,11 @@
             }
         }
 
+        let cedulaCtrl = null;
+
         async function verificarDocumento() {
-            const doc = document.getElementById('doc_marcacion').value.trim();
-            if (!doc) {
-                API.showToast('Por favor ingrese su documento de identidad.', 'warning');
-                return;
-            }
+            if (!cedulaCtrl || !cedulaCtrl.validate(true)) return;
+            const doc = cedulaCtrl.getFormatted(true);
 
             const btn = document.getElementById('btn-verificar-doc');
             btn.disabled = true;
@@ -281,7 +287,7 @@
 
                 const doc = (verifiedUser && verifiedUser.documento_identidad)
                     ? verifiedUser.documento_identidad
-                    : document.getElementById('doc_marcacion').value.trim();
+                    : (cedulaCtrl ? cedulaCtrl.getFormatted(true) : '');
 
                 const payload = {
                     documento_identidad: doc,
@@ -301,7 +307,9 @@
         }
 
         async function registrarQR() {
-            const doc = document.getElementById('doc_marcacion').value.trim();
+            const doc = (verifiedUser && verifiedUser.documento_identidad)
+                ? verifiedUser.documento_identidad
+                : (cedulaCtrl ? cedulaCtrl.getFormatted(true) : '');
             const qr_hash = document.getElementById('qr_token').value.trim();
 
             if (!doc) {
@@ -375,11 +383,17 @@
             stopCamera();
             verifiedUser = null;
             document.getElementById('modal-resultado').style.display = 'none';
-            document.getElementById('doc_marcacion').value = '';
+            if (cedulaCtrl) cedulaCtrl.clear();
             document.getElementById('qr_token').value = '';
             document.getElementById('step-camera').style.display = 'none';
             document.getElementById('step-identify').style.display = 'block';
-            document.getElementById('doc_marcacion').focus();
+            const btn = document.getElementById('btn-verificar-doc');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Verificar';
+            }
+            const inp = document.getElementById('doc_numero');
+            if (inp) inp.focus();
         }
 
         function escapeHtml(str) {
@@ -390,8 +404,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadModels();
 
+            cedulaCtrl = API.initCedulaInput({
+                selectId: 'doc_tipo',
+                inputId: 'doc_numero',
+                errorId: 'doc_error',
+                allowAdminZero: true
+            });
+
             document.getElementById('btn-verificar-doc').addEventListener('click', verificarDocumento);
-            document.getElementById('doc_marcacion').addEventListener('keyup', (e) => {
+            document.getElementById('doc_numero').addEventListener('keyup', (e) => {
                 if (e.key === 'Enter') verificarDocumento();
             });
 
@@ -409,7 +430,8 @@
             document.getElementById('btn-cancelar-marcacion').addEventListener('click', resetKiosk);
             document.getElementById('btn-next-user').addEventListener('click', resetKiosk);
 
-            document.getElementById('doc_marcacion').focus();
+            const docNum = document.getElementById('doc_numero');
+            if (docNum) docNum.focus();
         });
     </script>
 </body>

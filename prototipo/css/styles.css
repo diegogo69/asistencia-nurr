@@ -143,6 +143,67 @@ input:focus, select:focus, textarea:focus {
     font-weight: 500;
 }
 
+/* Documento de Identidad Venezolano (Selector V/E + Input Numérico) */
+.ci-input-group {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+
+.ci-input-group .ci-select {
+    width: 75px !important;
+    min-width: 75px;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
+    font-weight: 700;
+    font-size: 14px;
+    background-color: #f1f3f5;
+    color: var(--text-color);
+    text-align: center;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.ci-input-group .ci-select:focus {
+    border-color: var(--primary-color);
+    z-index: 2;
+}
+
+.ci-input-group .ci-number {
+    flex: 1;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.ci-input-group .ci-number:focus {
+    border-color: var(--primary-color);
+    z-index: 2;
+}
+
+.ci-input-group.ci-large .ci-select {
+    width: 90px !important;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 12px 8px;
+}
+
+.ci-input-group.ci-large .ci-number {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 12px;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.ci-error {
+    color: var(--danger-color);
+    font-size: 12px;
+    margin-top: 4px;
+    font-weight: 500;
+    display: none;
+}
+
 /* Buttons */
 .btn {
     padding: 8px 16px;
