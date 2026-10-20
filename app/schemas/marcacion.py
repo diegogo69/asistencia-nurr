@@ -1,12 +1,20 @@
 from typing import Optional, List, Any
-from pydantic import BaseModel, Field, ConfigDict, model_validator
+from pydantic import BaseModel, Field, ConfigDict, model_validator, field_validator
 from app.models.asistencia import MetodoValidacion, EstadoCumplimiento
+from app.core.documento import format_documento_identidad
 
 class MarcacionRequest(BaseModel):
     documento_identidad: str = Field(..., description="Documento de identidad del usuario")
     metodo: MetodoValidacion = Field(MetodoValidacion.FACIAL, description="Método de validación: facial o qr")
     vector_facial: Optional[List[float]] = Field(None, description="Vector de 128 floats capturado por face-api.js")
     codigo_qr: Optional[str] = Field(None, description="Hash/token de la credencial QR escaneada")
+
+    @field_validator("documento_identidad", mode="before")
+    @classmethod
+    def validate_and_format_documento(cls, v: Any) -> str:
+        if not v:
+            raise ValueError("El documento de identidad es requerido.")
+        return format_documento_identidad(str(v))
 
     @model_validator(mode="before")
     @classmethod

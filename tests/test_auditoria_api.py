@@ -3,6 +3,7 @@ from datetime import datetime, date, time, timedelta
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+from sqlalchemy import func
 from app.core.database import SessionLocal
 from app.models.asistencia import Asistencia, EstadoCumplimiento, MetodoValidacion
 from app.models.usuario import Usuario
@@ -22,7 +23,7 @@ def test_auditoria_incomplete_detection_and_resolution(auth_headers):
     db = SessionLocal()
     try:
         # 1. Crear un registro de asistencia en el pasado sin hora de salida
-        user = db.query(Usuario).filter(Usuario.documento_identidad == "V-00000000").first()
+        user = db.query(Usuario).filter(func.lower(Usuario.documento_identidad) == "v-00000000").first()
         ayer = date.today() - timedelta(days=1)
 
         asistencia_pasada = Asistencia(

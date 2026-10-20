@@ -21,7 +21,7 @@ def test_check_documento_uniqueness(auth_headers):
     assert res_existing.json()["disponible"] is False
 
     # Cédula nueva
-    random_doc = f"V-{uuid.uuid4().int % 90000000 + 10000000}"
+    random_doc = f"v-{uuid.uuid4().int % 90000000 + 10000000}"
     res_new = client.get(f"/api/v1/usuarios/check-documento?documento={random_doc}", headers=auth_headers)
     assert res_new.status_code == 200
     assert res_new.json()["disponible"] is True
@@ -32,7 +32,7 @@ def test_usuarios_crud_and_credentials(auth_headers):
     dept_id = dept_res.json()["items"][0]["id"]
 
     # Rol Técnico Contratado (id 3 o buscar por nombre)
-    doc_nuevo = f"V-{uuid.uuid4().int % 90000000 + 10000000}"
+    doc_nuevo = f"v-{uuid.uuid4().int % 90000000 + 10000000}"
     create_res = client.post("/api/v1/usuarios", json={
         "documento_identidad": doc_nuevo,
         "nombre": "Pedro",
@@ -84,7 +84,7 @@ def test_usuarios_create_with_nombres_apellidos_aliases(auth_headers):
     dept_res = client.get("/api/v1/departamentos", headers=auth_headers)
     dept_id = dept_res.json()["items"][0]["id"]
 
-    doc_nuevo = f"V-{uuid.uuid4().int % 90000000 + 10000000}"
+    doc_nuevo = f"v-{uuid.uuid4().int % 90000000 + 10000000}"
     create_res = client.post("/api/v1/usuarios", json={
         "documento_identidad": doc_nuevo,
         "nombres": "Carlos",

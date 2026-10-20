@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.core.database import get_db
 from app.core.security import verify_password, create_access_token
@@ -27,7 +28,7 @@ def format_user_profile(user: Usuario) -> UserProfileResponse:
 def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     """Autentica a un usuario administrativo (Coordinador/Administrador) y emite un token JWT."""
     # 1. Buscar usuario por documento de identidad
-    usuario = db.query(Usuario).filter(Usuario.documento_identidad == login_data.documento_identidad).first()
+    usuario = db.query(Usuario).filter(func.lower(Usuario.documento_identidad) == login_data.documento_identidad.lower()).first()
     if not usuario:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

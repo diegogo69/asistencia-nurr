@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Optional
 from math import ceil
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
@@ -7,6 +8,7 @@ from sqlalchemy import func
 
 from app.core.database import get_db
 from app.core.security import get_password_hash
+from app.core.documento import format_documento_identidad
 from app.api.deps import get_current_admin
 from app.models.usuario import Usuario
 from app.models.rol import Rol
@@ -46,12 +48,21 @@ def format_usuario_response(u: Usuario) -> UsuarioResponse:
 
 @router.get("/check-documento", response_model=CheckDocumentoResponse, summary="Validar unicidad de documento de identidad (onBlur)")
 def check_documento(
-    documento: str = Query(..., min_length=4, description="Documento a consultar"),
+    documento: str = Query(..., description="Documento a consultar"),
     exclude_id: Optional[int] = Query(None, description="ID de usuario a excluir en edición"),
     db: Session = Depends(get_db),
     admin: Usuario = Depends(get_current_admin)
 ):
-    query = db.query(Usuario).filter(func.lower(Usuario.documento_identidad) == documento.strip().lower())
+    try:
+        doc_clean = format_documento_identidad(documento)
+    except ValueError as e:
+        return CheckDocumentoResponse(
+            disponible=False,
+            documento_identidad=documento.strip(),
+            mensaje=str(e)
+        )
+
+    query = db.query(Usuario).filter(func.lower(Usuario.documento_identidad) == doc_clean.lower())
     if exclude_id:
         query = query.filter(Usuario.id != exclude_id)
     existing = query.first()
@@ -59,12 +70,12 @@ def check_documento(
     if existing:
         return CheckDocumentoResponse(
             disponible=False,
-            documento_identidad=documento.strip(),
+            documento_identidad=doc_clean,
             mensaje="El documento de identidad ingresado ya se encuentra registrado en la plataforma."
         )
     return CheckDocumentoResponse(
         disponible=True,
-        documento_identidad=documento.strip(),
+        documento_identidad=doc_clean,
         mensaje="Documento de identidad disponible para registro."
     )
 
@@ -90,11 +101,15 @@ def list_usuarios(
     query = db.query(Usuario)
     if q:
         term = f"%{q.strip()}%"
-        query = query.filter(
+        cond = (
             (Usuario.documento_identidad.ilike(term)) |
             (Usuario.nombre.ilike(term)) |
             (Usuario.apellido.ilike(term))
         )
+        digits_only = re.sub(r"\D", "", q)
+        if len(digits_only) >= 3:
+            cond = cond | (Usuario.documento_identidad.ilike(f"%{digits_only}%"))
+        query = query.filter(cond)
     if departamento_id:
         query = query.filter(Usuario.departamento_id == departamento_id)
     if rol_id:
@@ -133,8 +148,8 @@ def create_usuario(
     db: Session = Depends(get_db),
     admin: Usuario = Depends(get_current_admin)
 ):
-    doc_clean = data.documento_identidad.strip().upper()
-    existing = db.query(Usuario).filter(func.upper(Usuario.documento_identidad) == doc_clean).first()
+    doc_clean = format_documento_identidad(data.documento_identidad)
+    existing = db.query(Usuario).filter(func.lower(Usuario.documento_identidad) == doc_clean.lower()).first()
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -195,9 +210,9 @@ def update_usuario(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
 
     if data.documento_identidad is not None:
-        doc_clean = data.documento_identidad.strip().upper()
+        doc_clean = format_documento_identidad(data.documento_identidad)
         existing = db.query(Usuario).filter(
-            func.upper(Usuario.documento_identidad) == doc_clean,
+            func.lower(Usuario.documento_identidad) == doc_clean.lower(),
             Usuario.id != id
         ).first()
         if existing:
