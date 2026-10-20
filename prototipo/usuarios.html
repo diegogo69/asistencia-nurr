@@ -266,7 +266,7 @@
 
                     return `
                         <tr style="${u.activo ? '' : 'background-color: #fafafa; opacity: 0.85;'}">
-                            <td><strong>${escapeHtml(u.documento_identidad)}</strong></td>
+                            <td class="doc-cell" style="white-space: nowrap;"><strong>${escapeHtml(u.documento_identidad)}</strong></td>
                             <td>${nombreComp}</td>
                             <td><span class="badge" style="background:#e8eaf6; color:#283593; padding:3px 7px; border-radius:4px; font-size:12px;">${escapeHtml(u.rol || 'Rol #' + u.rol_id)}</span></td>
                             <td>${escapeHtml(u.departamento || '-')}</td>
@@ -505,6 +505,9 @@
             });
 
             loadUsuarios(1);
+            if (window.location.search.includes('open_modal=1')) {
+                setTimeout(openAddModal, 300);
+            }
         });
     </script>
 </body>
