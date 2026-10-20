@@ -60,7 +60,7 @@ def reset_database():
 
     print("=" * 60)
     print(" ¡BASE DE DATOS REINICIADA Y LISTA DESDE CERO!")
-    print(" Usuario Administrador: V-00000000")
+    print(" Usuario Administrador: v-00000000")
     print(" Contraseña:             admin1234")
     print(" URL del Prototipo:      http://localhost:8000/static/")
     print("=" * 60)

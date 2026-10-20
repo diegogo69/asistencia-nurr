@@ -98,8 +98,8 @@ def seed_database():
                 print(f"  [+] Red autorizada registrada: {ip_red}")
 
         # 5. Usuario Coordinador / Administrador Raíz
-        admin_doc = "V-00000000"
-        admin_user = db.query(Usuario).filter_by(documento_identidad=admin_doc).first()
+        admin_doc = "v-00000000"
+        admin_user = db.query(Usuario).filter(Usuario.documento_identidad.in_(["v-00000000", "V-00000000"])).first()
         if not admin_user:
             admin_user = Usuario(
                 documento_identidad=admin_doc,

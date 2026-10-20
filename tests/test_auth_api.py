@@ -12,7 +12,7 @@ def test_login_success():
     data = response.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
-    assert data["user"]["documento_identidad"] == "V-00000000"
+    assert data["user"]["documento_identidad"] == "v-00000000"
     assert data["user"]["rol"] == "Coordinador"
     assert data["user"]["requiere_password"] is True
 
@@ -43,7 +43,7 @@ def test_auth_me_and_logout():
     # 2. Get me
     me_res = client.get("/api/v1/auth/me", headers=headers)
     assert me_res.status_code == 200
-    assert me_res.json()["documento_identidad"] == "V-00000000"
+    assert me_res.json()["documento_identidad"] == "v-00000000"
 
     # 3. Logout
     logout_res = client.post("/api/v1/auth/logout", headers=headers)

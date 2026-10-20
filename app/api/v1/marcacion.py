@@ -5,6 +5,7 @@ from sqlalchemy import func
 
 from app.core.database import get_db
 from app.core.network import is_ip_authorized
+from app.core.documento import format_documento_identidad
 from app.models.usuario import Usuario
 from app.models.asistencia import Asistencia
 from app.schemas.marcacion import (
@@ -45,16 +46,26 @@ def verificar_usuario(
     client_ip: str = Depends(check_authorized_network)
 ):
     """Verifica si el usuario existe y si cuenta con biometría registrada para orientar la interfaz del kiosco."""
-    documento = payload.get("documento_identidad", "").strip().upper()
+    documento = payload.get("documento_identidad", "").strip()
     if not documento:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Debe ingresar el documento de identidad.")
 
-    usuario = db.query(Usuario).filter(func.upper(Usuario.documento_identidad) == documento).first()
-    if not usuario:
+    try:
+        doc_clean = format_documento_identidad(documento)
+    except ValueError as e:
         return VerificarUsuarioMarcacionResponse(
             registrado=False,
             activo=False,
             documento_identidad=documento,
+            mensaje=str(e)
+        )
+
+    usuario = db.query(Usuario).filter(func.lower(Usuario.documento_identidad) == doc_clean.lower()).first()
+    if not usuario:
+        return VerificarUsuarioMarcacionResponse(
+            registrado=False,
+            activo=False,
+            documento_identidad=doc_clean,
             mensaje="Usuario no registrado en la institución."
         )
 
@@ -101,8 +112,8 @@ def registrar_marcacion(
     client_ip: str = Depends(check_authorized_network)
 ):
     """Procesa y valida la marcación de asistencia con biometría facial o código QR de contingencia."""
-    doc_clean = data.documento_identidad.strip().upper()
-    usuario = db.query(Usuario).filter(func.upper(Usuario.documento_identidad) == doc_clean).first()
+    doc_clean = data.documento_identidad
+    usuario = db.query(Usuario).filter(func.lower(Usuario.documento_identidad) == doc_clean.lower()).first()
 
     if not usuario:
         raise HTTPException(

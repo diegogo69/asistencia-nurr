@@ -170,7 +170,7 @@
                     <tr>
                         <td><strong>${escapeHtml(item.fecha)}</strong></td>
                         <td>${escapeHtml(item.nombre_completo || '-')}</td>
-                        <td>${escapeHtml(item.documento_identidad || '-')}</td>
+                        <td class="doc-cell" style="white-space: nowrap;">${escapeHtml(item.documento_identidad || '-')}</td>
                         <td>${escapeHtml(item.departamento || '-')}</td>
                         <td>${escapeHtml(item.hora_entrada || '-')}</td>
                         <td><span style="color:#d32f2f; font-weight:bold;">${dias !== '-' ? dias + ' día(s)' : '-'}</span></td>

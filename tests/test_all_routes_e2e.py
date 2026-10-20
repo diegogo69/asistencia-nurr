@@ -56,7 +56,7 @@ def test_auth_cycle_endpoints(auth_headers):
     # Perfil /me autenticado
     res_me = client.get("/api/v1/auth/me", headers=auth_headers)
     assert res_me.status_code == 200
-    assert res_me.json()["documento_identidad"] == "V-00000000"
+    assert res_me.json()["documento_identidad"] == "v-00000000"
 
     # Logout
     res_logout = client.post("/api/v1/auth/logout", headers=auth_headers)
@@ -191,7 +191,7 @@ def test_usuarios_and_credentials_full_routes(auth_headers):
     assert res_check_admin.status_code == 200
     assert res_check_admin.json()["disponible"] is False
 
-    doc_nuevo = f"V-{random.randint(40000000, 49000000)}"
+    doc_nuevo = f"v-{random.randint(40000000, 49000000)}"
     res_check_new = client.get(f"/api/v1/usuarios/check-documento?documento={doc_nuevo}", headers=auth_headers)
     assert res_check_new.status_code == 200
     assert res_check_new.json()["disponible"] is True

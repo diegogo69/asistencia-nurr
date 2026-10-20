@@ -28,7 +28,7 @@ def test_database_connection_and_seed_data():
         assert len(redes) >= 2
 
         # 5. Verificar usuario administrador raíz y hash de contraseña
-        admin = db.query(Usuario).filter_by(documento_identidad="V-00000000").first()
+        admin = db.query(Usuario).filter_by(documento_identidad="v-00000000").first()
         assert admin is not None
         assert admin.activo is True
         assert verify_password("admin1234", admin.password_hash) is True

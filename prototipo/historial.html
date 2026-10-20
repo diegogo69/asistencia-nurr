@@ -172,7 +172,7 @@
                         <tr>
                             <td><strong>${escapeHtml(row.fecha)}</strong></td>
                             <td>${escapeHtml(row.nombre_completo || '-')}</td>
-                            <td>${escapeHtml(row.documento_identidad || '-')}</td>
+                            <td class="doc-cell" style="white-space: nowrap;">${escapeHtml(row.documento_identidad || '-')}</td>
                             <td>${escapeHtml(row.departamento || '-')}</td>
                             <td>${escapeHtml(row.hora_entrada || '-')}</td>
                             <td>${escapeHtml(row.hora_salida || '-')}</td>

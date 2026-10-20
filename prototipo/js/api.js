@@ -176,6 +176,171 @@ const API = {
             const name = u.nombre_completo || `${u.nombres || u.nombre || ''} ${u.apellidos || u.apellido || ''}`.trim() || u.documento_identidad;
             el.textContent = `${name} (${u.rol || 'Admin'})`;
         }
+    },
+
+    // Utilidades para Documento de Identidad Venezolano (Cédula)
+    formatDocumento(tipo, numero) {
+        const cleanTipo = (tipo || 'V').toString().trim().toLowerCase();
+        const cleanNum = (numero || '').toString().replace(/\D/g, '');
+        if (!cleanNum) return '';
+        const numVal = parseInt(cleanNum, 10);
+        if (numVal === 0) {
+            return `${cleanTipo}-00000000`;
+        }
+        return `${cleanTipo}-${numVal}`;
+    },
+
+    parseDocumento(docStr) {
+        if (!docStr) return { tipo: 'V', numero: '' };
+        const str = docStr.toString().trim();
+        let tipo = 'V';
+        let numPart = str;
+        const match = str.match(/^([veVE])\s*[-]?\s*(.*)$/);
+        if (match) {
+            tipo = match[1].toUpperCase();
+            numPart = match[2];
+        }
+        const numero = numPart.replace(/\D/g, '');
+        return { tipo, numero };
+    },
+
+    validateDocumento(tipo, numero, allowAdminZero = false) {
+        if (!numero || numero.toString().trim() === '') {
+            return { valid: false, message: 'El número de documento de identidad es requerido.' };
+        }
+        const cleanNum = numero.toString().replace(/\D/g, '');
+        if (!cleanNum) {
+            return { valid: false, message: 'El documento debe contener únicamente caracteres numéricos.' };
+        }
+        const val = parseInt(cleanNum, 10);
+        if (val === 0) {
+            if (allowAdminZero) {
+                return { valid: true };
+            }
+            return { valid: false, message: 'El número de documento debe estar comprendido entre 1000000 y 99999999.' };
+        }
+        if (val < 1000000 || val > 99999999) {
+            return { valid: false, message: 'El número de documento debe estar comprendido entre 1000000 y 99999999.' };
+        }
+        return { valid: true };
+    },
+
+    initCedulaInput({ selectId, inputId, errorId = null, allowAdminZero = false, onChange = null }) {
+        const selEl = typeof selectId === 'string' ? document.getElementById(selectId) : selectId;
+        const inpEl = typeof inputId === 'string' ? document.getElementById(inputId) : inputId;
+        const errEl = errorId ? (typeof errorId === 'string' ? document.getElementById(errorId) : errorId) : null;
+
+        if (!selEl || !inpEl) {
+            console.warn('initCedulaInput: No se encontraron los elementos select o input especificados.');
+            return null;
+        }
+
+        // Restringir a sólo dígitos en keypress
+        inpEl.addEventListener('keypress', (e) => {
+            // Permitir teclas de control
+            if (e.ctrlKey || e.altKey || e.metaKey) return;
+            if (e.charCode < 48 || e.charCode > 57) {
+                e.preventDefault();
+            }
+        });
+
+        // Filtrar y limitar longitud en evento input
+        inpEl.addEventListener('input', () => {
+            const raw = inpEl.value;
+            const digits = raw.replace(/\D/g, '').slice(0, 8);
+            if (raw !== digits) {
+                inpEl.value = digits;
+            }
+            if (errEl) {
+                errEl.style.display = 'none';
+                errEl.textContent = '';
+                inpEl.style.borderColor = '';
+            }
+            if (typeof onChange === 'function') {
+                onChange(ctrl.getFormatted());
+            }
+        });
+
+        // Soporte inteligente para pegado (paste)
+        inpEl.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text') || '';
+            const parsed = API.parseDocumento(text);
+            if (parsed.tipo) {
+                selEl.value = parsed.tipo;
+            }
+            inpEl.value = (parsed.numero || '').slice(0, 8);
+            if (errEl) {
+                errEl.style.display = 'none';
+                inpEl.style.borderColor = '';
+            }
+            if (typeof onChange === 'function') {
+                onChange(ctrl.getFormatted());
+            }
+        });
+
+        const ctrl = {
+            selectElement: selEl,
+            inputElement: inpEl,
+            errorElement: errEl,
+            getTipo() {
+                return selEl.value || 'V';
+            },
+            getNumero() {
+                return (inpEl.value || '').replace(/\D/g, '');
+            },
+            getValue() {
+                return {
+                    tipo: this.getTipo(),
+                    numero: this.getNumero(),
+                    formatted: this.getFormatted()
+                };
+            },
+            setValue(docStr) {
+                const parsed = API.parseDocumento(docStr);
+                selEl.value = parsed.tipo || 'V';
+                inpEl.value = parsed.numero || '';
+                if (errEl) errEl.style.display = 'none';
+                inpEl.style.borderColor = '';
+            },
+            validate(customAllowZero = allowAdminZero) {
+                const res = API.validateDocumento(this.getTipo(), this.getNumero(), customAllowZero);
+                if (!res.valid) {
+                    if (errEl) {
+                        errEl.textContent = res.message;
+                        errEl.style.display = 'block';
+                    }
+                    inpEl.style.borderColor = 'var(--danger-color)';
+                    return false;
+                }
+                if (errEl) {
+                    errEl.style.display = 'none';
+                    errEl.textContent = '';
+                }
+                inpEl.style.borderColor = '';
+                return true;
+            },
+            getFormatted(customAllowZero = allowAdminZero) {
+                const numero = this.getNumero();
+                if (!numero) return '';
+                return API.formatDocumento(this.getTipo(), numero);
+            },
+            clear() {
+                selEl.value = 'V';
+                inpEl.value = '';
+                if (errEl) {
+                    errEl.style.display = 'none';
+                    errEl.textContent = '';
+                }
+                inpEl.style.borderColor = '';
+            },
+            setDisabled(disabled) {
+                selEl.disabled = disabled;
+                inpEl.disabled = disabled;
+            }
+        };
+
+        return ctrl;
     }
 };
 

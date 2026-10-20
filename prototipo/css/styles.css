@@ -143,6 +143,103 @@ input:focus, select:focus, textarea:focus {
     font-weight: 500;
 }
 
+/* Documento de Identidad Venezolano (Selector V/E + Input Numérico) */
+.ci-input-group {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+}
+
+.ci-input-group .ci-select {
+    width: 54px !important;
+    min-width: 54px;
+    max-width: 54px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    border: 1px solid var(--border-color);
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: none;
+    font-weight: 700;
+    font-size: 14px;
+    background-color: #f1f3f5;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23495057' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 11px center;
+    background-size: 10px 10px;
+    color: var(--text-color);
+    text-align: left;
+    cursor: pointer;
+    padding: 8px 22px 8px 14px;
+    transition: border-color 0.2s;
+}
+
+.ci-input-group .ci-select option {
+    text-align: left;
+    font-weight: 600;
+    padding: 6px 14px;
+    background-color: white;
+    color: var(--text-color);
+}
+
+.ci-input-group .ci-select:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    z-index: 2;
+}
+
+.ci-input-group .ci-number {
+    flex: 1;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.ci-input-group .ci-number:focus {
+    border-color: var(--primary-color);
+    z-index: 2;
+}
+
+.ci-input-group.ci-large .ci-select {
+    width: 70px !important;
+    min-width: 70px;
+    max-width: 70px;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 12px 28px 12px 18px;
+    background-position: right 15px center;
+    background-size: 12px 12px;
+}
+
+.ci-input-group.ci-large .ci-select option {
+    font-size: 18px;
+    padding: 8px 18px;
+}
+
+.ci-input-group.ci-large .ci-number {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 12px;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.ci-error {
+    color: var(--danger-color);
+    font-size: 12px;
+    margin-top: 4px;
+    font-weight: 500;
+    display: none;
+}
+
+/* Identity document cells non-breaking in tables */
+.doc-cell,
+.ci-cell,
+td.doc-cell,
+td.ci-cell {
+    white-space: nowrap !important;
+}
+
 /* Buttons */
 .btn {
     padding: 8px 16px;

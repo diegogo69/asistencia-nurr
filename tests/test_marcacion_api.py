@@ -27,7 +27,7 @@ def test_marcacion_flow_facial_and_qr(auth_headers):
     # 1. Crear un usuario de prueba
     dept_res = client.get("/api/v1/departamentos", headers=auth_headers)
     dept_id = dept_res.json()["items"][0]["id"]
-    doc = f"V-{uuid.uuid4().int % 90000000 + 10000000}"
+    doc = f"v-{uuid.uuid4().int % 90000000 + 10000000}"
 
     user_res = client.post("/api/v1/usuarios", json={
         "documento_identidad": doc,
