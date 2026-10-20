@@ -68,6 +68,37 @@
             margin-bottom: 5px;
             font-family: monospace;
         }
+        .shortcut-tag {
+            font-size: 11px;
+            font-weight: 500;
+            opacity: 0.85;
+            margin-left: 6px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.25);
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .btn-secondary .shortcut-tag {
+            background: rgba(0, 0, 0, 0.08);
+            color: inherit;
+        }
+        .shortcut-hint {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        kbd {
+            background: #f1f3f5;
+            border: 1px solid #ced4da;
+            border-bottom: 2px solid #adb5bd;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #343a40;
+            display: inline-block;
+        }
     </style>
 </head>
 <body class="kiosk-mode">
@@ -117,10 +148,17 @@
                 Mire fijamente a la cámara para validar su identidad.
             </p>
 
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button id="btn-cancelar-marcacion" class="btn btn-secondary">Cancelar</button>
-                <button id="btn-confirmar-facial" class="btn btn-primary" style="font-weight: bold; padding: 10px 24px;">Confirmar Marcación Facial</button>
+            <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <button id="btn-cancelar-marcacion" class="btn btn-secondary" title="Atajo: Tecla Esc">
+                    Cancelar <span class="shortcut-tag">[Esc]</span>
+                </button>
+                <button id="btn-confirmar-facial" class="btn btn-primary" style="font-weight: bold; padding: 10px 24px;" title="Atajo: Tecla Enter o Espacio">
+                    Confirmar Marcación Facial <span class="shortcut-tag">[Enter / Espacio]</span>
+                </button>
             </div>
+            <p class="shortcut-hint">
+                Atajos: <kbd>Enter</kbd> o <kbd>Espacio</kbd> para confirmar &bull; <kbd>Esc</kbd> para cancelar
+            </p>
         </div>
 
         <div style="margin-top: 25px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
@@ -246,6 +284,9 @@
                 document.getElementById('step-identify').style.display = 'none';
                 document.getElementById('step-camera').style.display = 'block';
 
+                const btnConfirmar = document.getElementById('btn-confirmar-facial');
+                if (btnConfirmar) btnConfirmar.focus();
+
                 await initCamera();
             } catch (err) {
                 API.showToast(err.message || 'Error al verificar usuario.', 'error');
@@ -258,6 +299,7 @@
         async function registrarFacial() {
             if (!verifiedUser) return;
             const btn = document.getElementById('btn-confirmar-facial');
+            if (btn.disabled) return;
             btn.disabled = true;
             btn.textContent = 'Procesando vector...';
 
@@ -296,7 +338,7 @@
                 API.showToast(`Error al registrar asistencia: ${err.message}`, 'error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Confirmar Marcación Facial';
+                btn.innerHTML = 'Confirmar Marcación Facial <span class="shortcut-tag">[Enter / Espacio]</span>';
             }
         }
 
@@ -408,6 +450,59 @@
             document.getElementById('btn-confirmar-facial').addEventListener('click', registrarFacial);
             document.getElementById('btn-cancelar-marcacion').addEventListener('click', resetKiosk);
             document.getElementById('btn-next-user').addEventListener('click', resetKiosk);
+
+            // Manejo de atajos de teclado para la experiencia Kiosco:
+            // - Teclas Enter o Espacio activan "Confirmar Marcación Facial"
+            // - Tecla Esc activa "Cancelar"
+            document.addEventListener('keydown', (e) => {
+                if (e.repeat) return;
+
+                const modalResultado = document.getElementById('modal-resultado');
+                const isModalOpen = modalResultado && (modalResultado.style.display === 'flex' || window.getComputedStyle(modalResultado).display === 'flex');
+
+                if (isModalOpen) {
+                    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar' || e.code === 'Space' || e.key === 'Escape' || e.key === 'Esc') {
+                        e.preventDefault();
+                        resetKiosk();
+                        return;
+                    }
+                }
+
+                const stepCamera = document.getElementById('step-camera');
+                const isCameraActive = stepCamera && stepCamera.style.display !== 'none' && window.getComputedStyle(stepCamera).display !== 'none';
+
+                if (isCameraActive) {
+                    // Teclas 'Enter' o 'Espacio': confirman la marcación facial
+                    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar' || e.code === 'Space') {
+                        e.preventDefault();
+                        const btnConfirmar = document.getElementById('btn-confirmar-facial');
+                        if (btnConfirmar && !btnConfirmar.disabled) {
+                            btnConfirmar.click();
+                        }
+                        return;
+                    }
+
+                    // Tecla 'Esc': activa la acción de Cancelar
+                    if (e.key === 'Escape' || e.key === 'Esc') {
+                        e.preventDefault();
+                        const btnCancelar = document.getElementById('btn-cancelar-marcacion');
+                        if (btnCancelar) {
+                            btnCancelar.click();
+                        } else {
+                            resetKiosk();
+                        }
+                        return;
+                    }
+                }
+
+                // En el paso de identificación, Esc reinicia / limpia
+                const stepIdentify = document.getElementById('step-identify');
+                const isIdentifyActive = stepIdentify && stepIdentify.style.display !== 'none';
+                if (isIdentifyActive && (e.key === 'Escape' || e.key === 'Esc')) {
+                    e.preventDefault();
+                    resetKiosk();
+                }
+            });
 
             document.getElementById('doc_marcacion').focus();
         });
