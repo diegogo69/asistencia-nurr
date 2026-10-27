@@ -13,17 +13,42 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #0b2545 0%, #134074 100%);
+            background-color: #0b2545;
+            background-image: 
+                linear-gradient(135deg, rgba(11, 37, 69, 0.55) 0%, rgba(15, 23, 42, 0.50) 100%),
+                url('img/fondo-ula-nurr.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             padding: 20px;
         }
         .kiosk-box {
             background: white;
             border-radius: 16px;
-            box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
             max-width: 580px;
             width: 100%;
             padding: 30px;
             text-align: center;
+        }
+        .kiosk-logo {
+            max-width: 170px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+        @media (max-width: 768px) {
+            .kiosk-mode {
+                background-attachment: scroll;
+                padding: 16px;
+            }
+            .kiosk-box {
+                padding: 25px 18px;
+            }
         }
         .camera-box {
             position: relative;
@@ -104,6 +129,7 @@
 <body class="kiosk-mode">
     <div class="kiosk-box">
         <div style="margin-bottom: 15px;">
+            <img src="img/logo-ula-nurr-azul.png" alt="Logo ULA-NURR" class="kiosk-logo">
             <div id="live-clock" class="clock-display">--:--:--</div>
             <h2 style="color: var(--primary-color); font-size: 20px; margin: 0;">Punto de Marcación - ULA NURR</h2>
             <p style="color: var(--text-light); font-size: 13px;">Soporte Técnico Institucional</p>

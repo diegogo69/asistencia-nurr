@@ -403,49 +403,97 @@ tr:hover {
 /* Login specific */
 .login-container {
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--bg-color);
+    padding: 24px 16px;
+    background-color: #0b2545;
+    background-image: 
+        linear-gradient(135deg, rgba(11, 37, 69, 0.55) 0%, rgba(15, 23, 42, 0.50) 100%),
+        url('../img/fondo-ula-nurr.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    position: relative;
 }
 
 .login-box {
-    background-color: white;
-    padding: 40px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background-color: #ffffff;
+    padding: 40px 32px;
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
     text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.login-logo {
+    max-width: 180px;
+    width: 100%;
+    height: auto;
+    margin-bottom: 16px;
+    display: inline-block;
 }
 
 .login-box h2 {
     color: var(--primary-color);
-    margin-bottom: 20px;
+    margin-bottom: 8px;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .login-container, .kiosk-mode, .kiosk-container {
+        background-attachment: scroll;
+        padding: 16px;
+    }
+    .login-box, .kiosk-box {
+        padding: 30px 20px;
+    }
 }
 
 /* Kiosk / Marcacion specific */
-.kiosk-container {
+.kiosk-mode, .kiosk-container {
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: var(--primary-color);
-    color: white;
+    padding: 24px 16px;
+    background-color: #0b2545;
+    background-image: 
+        linear-gradient(135deg, rgba(11, 37, 69, 0.55) 0%, rgba(15, 23, 42, 0.50) 100%),
+        url('../img/fondo-ula-nurr.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    position: relative;
 }
 
 .kiosk-box {
-    background-color: white;
+    background-color: #ffffff;
     color: var(--text-color);
-    padding: 40px;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    padding: 35px 30px;
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 600px;
+    max-width: 580px;
     text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+.kiosk-logo {
+    max-width: 170px;
+    width: 100%;
+    height: auto;
+    margin-bottom: 12px;
+    display: inline-block;
 }
 
 .camera-preview {
