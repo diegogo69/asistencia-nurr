@@ -24,3 +24,12 @@ certs/*.crt
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Logs
+logs/*.log
+logs/*.txt
+
+# Build artifacts
+build/
+dist/
+*.spec

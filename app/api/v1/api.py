@@ -8,6 +8,7 @@ from app.api.v1.marcacion import router as marcacion_router
 from app.api.v1.auditoria import router as auditoria_router
 from app.api.v1.asistencias import router as asistencias_router
 from app.api.v1.reportes import router as reportes_router
+from app.api.v1.sistema import router as sistema_router
 
 api_router = APIRouter()
 
@@ -20,3 +21,4 @@ api_router.include_router(marcacion_router)
 api_router.include_router(auditoria_router)
 api_router.include_router(asistencias_router)
 api_router.include_router(reportes_router)
+api_router.include_router(sistema_router)

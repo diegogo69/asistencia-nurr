@@ -176,6 +176,188 @@ const API = {
             const name = u.nombre_completo || `${u.nombres || u.nombre || ''} ${u.apellidos || u.apellido || ''}`.trim() || u.documento_identidad;
             el.textContent = `${name} (${u.rol || 'Admin'})`;
         }
+        this.initAdminServerControls();
+    },
+
+    isAdmin() {
+        const u = this.getUser();
+        if (!u) return false;
+        const rol = (u.rol || '').toLowerCase();
+        return Boolean(u.requiere_password || rol.includes('admin') || rol.includes('coordinador'));
+    },
+
+    async getServerStatus() {
+        return await this.request('/sistema/estado');
+    },
+
+    async getServerLogs(lineas = 100) {
+        return await this.request(`/sistema/logs?lineas=${encodeURIComponent(lineas)}`);
+    },
+
+    async shutdownServer() {
+        return await this.request('/sistema/detener', { method: 'POST' });
+    },
+
+    initAdminServerControls() {
+        if (!this.getToken() || !this.isAdmin()) return;
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('login.html') || currentPath.includes('marcacion.html')) return;
+
+        const userInfo = document.querySelector('.top-bar .user-info');
+        if (userInfo && !document.getElementById('btn-admin-stop-server')) {
+            const stopBtn = document.createElement('button');
+            stopBtn.id = 'btn-admin-stop-server';
+            stopBtn.type = 'button';
+            stopBtn.className = 'btn btn-danger';
+            stopBtn.title = 'Detener la ejecución del servidor (Perfil Administrador)';
+            stopBtn.style.display = 'inline-flex';
+            stopBtn.style.alignItems = 'center';
+            stopBtn.style.gap = '6px';
+            stopBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg> Detener Servidor`;
+            stopBtn.addEventListener('click', () => this.openShutdownModal());
+            userInfo.appendChild(stopBtn);
+        }
+    },
+
+    openShutdownModal() {
+        let overlay = document.getElementById('admin-shutdown-modal-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'admin-shutdown-modal-overlay';
+            overlay.className = 'modal-overlay';
+            overlay.style.zIndex = '10000';
+            overlay.innerHTML = `
+                <div class="modal" role="dialog" aria-modal="true" aria-labelledby="shutdown-modal-title">
+                    <div class="modal-header">
+                        <h3 id="shutdown-modal-title" style="color: var(--danger-color); display: flex; align-items: center; gap: 8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+                            Detener Ejecución del Servidor
+                        </h3>
+                        <button type="button" class="close-btn" id="shutdown-modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 12px; font-weight: 500;">¿Está seguro de que desea detener el servidor de la aplicación <strong>Asistencia-NURR</strong>?</p>
+                        <p style="font-size: 13.5px; color: var(--text-light); line-height: 1.5;">
+                            La consola de comandos se ejecuta en segundo plano. Al confirmar esta acción, se finalizará el servidor web de forma segura, se guardarán todos los registros en la carpeta <code>logs/</code> y la aplicación dejará de estar accesible hasta que vuelva a iniciarse el ejecutable.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="shutdown-modal-cancel">Cancelar</button>
+                        <button type="button" class="btn btn-danger" id="shutdown-modal-confirm">Sí, Detener Servidor</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const closeFn = () => {
+                overlay.style.display = 'none';
+            };
+            overlay.querySelector('#shutdown-modal-close').addEventListener('click', closeFn);
+            overlay.querySelector('#shutdown-modal-cancel').addEventListener('click', closeFn);
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeFn();
+            });
+
+            overlay.querySelector('#shutdown-modal-confirm').addEventListener('click', async () => {
+                const confirmBtn = overlay.querySelector('#shutdown-modal-confirm');
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = 'Deteniendo...';
+                try {
+                    const res = await this.shutdownServer();
+                    overlay.style.display = 'none';
+                    this.showServerStoppedScreen(res);
+                } catch (err) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.textContent = 'Sí, Detener Servidor';
+                    this.showToast(err.message || 'No se pudo detener el servidor.', 'error');
+                }
+            });
+        }
+        overlay.style.display = 'flex';
+    },
+
+    showServerStoppedScreen(res) {
+        const stoppedOverlay = document.createElement('div');
+        stoppedOverlay.id = 'server-stopped-overlay';
+        stoppedOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.94);z-index:20000;display:flex;justify-content:center;align-items:center;padding:24px;';
+        stoppedOverlay.innerHTML = `
+            <div style="background:#ffffff;max-width:480px;width:100%;border-radius:10px;padding:32px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,0.4);">
+                <div style="width:60px;height:60px;border-radius:50%;background:#fde8e8;color:#c62828;display:flex;align-items:center;justify-content:center;margin:0 auto 18px auto;">
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+                </div>
+                <h2 style="color:#1e293b;margin-bottom:10px;font-size:1.4rem;">Servidor Detenido</h2>
+                <p style="color:#475569;font-size:14.5px;margin-bottom:16px;line-height:1.5;">
+                    El servidor de <strong>Asistencia-NURR</strong> se ha detenido de forma ordenada. Los registros de operación han sido guardados en el directorio <code>logs/</code>.
+                </p>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:12px;font-size:12.5px;color:#64748b;margin-bottom:20px;">
+                    Detenido por: <strong>${(res && res.detenido_por) ? res.detenido_por : 'Administrador'}</strong>
+                </div>
+                <p style="color:#64748b;font-size:13px;">Ya puede cerrar esta pestaña o ventana del navegador de forma segura.</p>
+            </div>
+        `;
+        document.body.appendChild(stoppedOverlay);
+    },
+
+    async openLogsModal() {
+        let overlay = document.getElementById('admin-logs-modal-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'admin-logs-modal-overlay';
+            overlay.className = 'modal-overlay';
+            overlay.style.zIndex = '10000';
+            overlay.innerHTML = `
+                <div class="modal large" role="dialog" aria-modal="true" aria-labelledby="logs-modal-title">
+                    <div class="modal-header">
+                        <h3 id="logs-modal-title">Registros del Sistema (Logs)</h3>
+                        <button type="button" class="close-btn" id="logs-modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;">
+                            <span id="logs-file-path" style="font-size:12.5px;color:var(--text-light);font-family:monospace;">Ruta: logs/asistencia.log</span>
+                            <button type="button" class="btn btn-secondary btn-icon" id="logs-refresh-btn">Actualizar</button>
+                        </div>
+                        <pre id="logs-viewer-content" style="background:#0f172a;color:#e2e8f0;padding:14px;border-radius:6px;font-size:12px;line-height:1.45;max-height:420px;overflow:auto;white-space:pre-wrap;word-break:break-word;">Cargando registros...</pre>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="logs-modal-ok">Cerrar</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            const closeFn = () => {
+                overlay.style.display = 'none';
+            };
+            overlay.querySelector('#logs-modal-close').addEventListener('click', closeFn);
+            overlay.querySelector('#logs-modal-ok').addEventListener('click', closeFn);
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeFn();
+            });
+            overlay.querySelector('#logs-refresh-btn').addEventListener('click', () => this.refreshLogsContent());
+        }
+        overlay.style.display = 'flex';
+        await this.refreshLogsContent();
+    },
+
+    async refreshLogsContent() {
+        const pre = document.getElementById('logs-viewer-content');
+        const pathEl = document.getElementById('logs-file-path');
+        if (!pre) return;
+        pre.textContent = 'Cargando registros...';
+        try {
+            const data = await this.getServerLogs(120);
+            if (pathEl && data.logs_path) {
+                pathEl.textContent = `Archivo: ${data.logs_path}`;
+            }
+            if (data.logs && data.logs.length > 0) {
+                pre.textContent = data.logs.join('\n');
+                pre.scrollTop = pre.scrollHeight;
+            } else {
+                pre.textContent = 'No hay registros disponibles aún.';
+            }
+        } catch (err) {
+            pre.textContent = `Error al cargar registros: ${err.message}`;
+        }
     },
 
     // Utilidades para Documento de Identidad Venezolano (Cédula)
