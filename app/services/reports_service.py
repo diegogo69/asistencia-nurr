@@ -171,7 +171,7 @@ def generate_pdf_report(
 
     # Identificación y numeración de control oficial del reporte
     timestamp_actual = datetime.now()
-    codigo_control = f"REP-NURR-{timestamp_actual.strftime('%Y%m%d-%H%M%S')}"
+    codigo_control = f"ASIS-NURR-{timestamp_actual.strftime('%Y%m%d-%H%M%S')}"
 
     if not titulo_reporte:
         if usuario_nombre:
@@ -179,7 +179,7 @@ def generate_pdf_report(
         elif depto_nombre:
             titulo_reporte = f"REPORTE DEPARTAMENTAL DE ASISTENCIA - {depto_nombre.upper()}"
         else:
-            titulo_reporte = "REPORTE OFICIAL CONSOLIDADO DE ASISTENCIA"
+            titulo_reporte = "REPORTE CONSOLIDADO DE ASISTENCIA"
 
     doc = SimpleDocTemplate(
         buffer,
@@ -293,17 +293,17 @@ def generate_pdf_report(
     center_content = [
         Paragraph("UNIVERSIDAD DE LOS ANDES", inst_title_style),
         Paragraph("NÚCLEO UNIVERSITARIO RAFAEL RANGEL", inst_sub_style),
-        Paragraph("UNIDAD DE SOPORTE TÉCNICO | SISTEMA INTEGRADO DE CONTROL DE ASISTENCIA", inst_unit_style),
+        Paragraph("UNIDAD DE SOPORTE TÉCNICO | SISTEMA DE CONTROL DE ASISTENCIA", inst_unit_style),
         Spacer(1, 4),
         Paragraph(titulo_reporte, doc_title_style)
     ]
 
     badge_content = [
-        Paragraph("CÓDIGO DE CONTROL OFICIAL", badge_label_style),
+        Paragraph("CÓDIGO DE CONTROL", badge_label_style),
         Paragraph(codigo_control, badge_val_style),
         Spacer(1, 2),
         Paragraph(f"Emisión: {timestamp_actual.strftime('%d/%m/%Y %I:%M %p')}", badge_date_style),
-        Paragraph("DOCUMENTO OFICIAL AUDITABLE", badge_label_style)
+        Paragraph("REPORTE OFICIAL AUDITABLE", badge_label_style)
     ]
 
     badge_table = Table([[badge_content]], colWidths=[146])
