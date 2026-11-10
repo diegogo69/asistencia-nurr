@@ -24,6 +24,20 @@ if not exist "certs\cert.pem" (
     python generate_certs.py
 )
 
+set "INIT_DB=0"
+if not exist "asistencia_nurr.db" (
+    set "INIT_DB=1"
+) else (
+    for %%F in ("asistencia_nurr.db") do (
+        if %%~zF EQU 0 set "INIT_DB=1"
+    )
+)
+
+if "%INIT_DB%"=="1" (
+    echo [*] Base de datos no inicializada. Aplicando migraciones y sembrando datos maestros...
+    python reset_db.py
+)
+
 echo.
 echo [*] Iniciando servidor web en modo seguro HTTPS...
 echo [i] Acceso local:       https://localhost:8000
