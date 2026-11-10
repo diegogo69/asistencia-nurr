@@ -112,11 +112,7 @@ class ServerManagerGUI:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("Asistencia-NURR - Servidor (Perfil Administrador)")
-        self.root.geometry("520x360")
         self.root.resizable(False, False)
-
-        # Centrar en pantalla
-        self.center_window(520, 360)
 
         # Estilo visual Segoe UI nativo de Windows 10
         self.root.configure(bg="#f8fafc")
@@ -126,6 +122,10 @@ class ServerManagerGUI:
         self.target_url = "https://localhost:8000"
 
         self.setup_ui()
+        self.root.update_idletasks()
+        w = max(580, self.root.winfo_reqwidth())
+        h = max(360, self.root.winfo_reqheight())
+        self.center_window(w, h)
         self.root.protocol("WM_DELETE_WINDOW", self.on_request_close)
 
         # Iniciar servidor en segundo plano
@@ -141,34 +141,35 @@ class ServerManagerGUI:
 
     def setup_ui(self):
         # Encabezado institucional
-        header_frame = tk.Frame(self.root, bg="#0056b3", height=70)
+        header_frame = tk.Frame(self.root, bg="#0056b3", padx=24, pady=16)
         header_frame.pack(fill=tk.X, side=tk.TOP)
-        header_frame.pack_propagate(False)
 
         title_lbl = tk.Label(
             header_frame,
             text="SISTEMA DE ASISTENCIA AUTOMATIZADA - ULA-NURR",
             font=("Segoe UI", 12, "bold"),
             bg="#0056b3",
-            fg="white"
+            fg="white",
+            anchor=tk.W
         )
-        title_lbl.pack(pady=(12, 2))
+        title_lbl.pack(fill=tk.X, pady=(0, 3))
 
         subtitle_lbl = tk.Label(
             header_frame,
-            text="Unidad de Soporte Técnico | Control de Ejecución (Sin Consola)",
-            font=("Segoe UI", 9),
+            text="Unidad de Soporte Técnico  |  Control de Ejecución (Sin Consola)",
+            font=("Segoe UI", 9.5),
             bg="#0056b3",
-            fg="#e0e7ff"
+            fg="#dbeafe",
+            anchor=tk.W
         )
-        subtitle_lbl.pack()
+        subtitle_lbl.pack(fill=tk.X)
 
         # Panel de Estado central
-        content_frame = tk.Frame(self.root, bg="#f8fafc", padx=24, pady=18)
+        content_frame = tk.Frame(self.root, bg="#f8fafc", padx=24, pady=20)
         content_frame.pack(fill=tk.BOTH, expand=True)
 
         status_box = tk.Frame(content_frame, bg="#ffffff", bd=1, relief=tk.SOLID, padx=16, pady=14)
-        status_box.pack(fill=tk.X, pady=(0, 15))
+        status_box.pack(fill=tk.X, pady=(0, 14))
 
         self.status_indicator = tk.Label(
             status_box,
@@ -186,27 +187,29 @@ class ServerManagerGUI:
             bg="#ffffff",
             fg="#475569"
         )
-        self.url_lbl.pack(anchor=tk.W, pady=(4, 0))
+        self.url_lbl.pack(anchor=tk.W, pady=(6, 0))
 
         self.logs_lbl = tk.Label(
             status_box,
             text=f"Directorio de logs: {LOGS_DIR.resolve()}",
             font=("Segoe UI", 8.5),
             bg="#ffffff",
-            fg="#64748b"
+            fg="#64748b",
+            wraplength=500,
+            justify=tk.LEFT
         )
-        self.logs_lbl.pack(anchor=tk.W, pady=(4, 0))
+        self.logs_lbl.pack(anchor=tk.W, pady=(6, 0))
 
         # Mensaje informativo
         info_lbl = tk.Label(
             content_frame,
             text="La consola de comandos está oculta. Utilice los botones inferiores para abrir la web,\ninspeccionar los logs o apagar el servidor de forma segura.",
-            font=("Segoe UI", 8.5),
+            font=("Segoe UI", 9),
             bg="#f8fafc",
-            fg="#64748b",
+            fg="#475569",
             justify=tk.LEFT
         )
-        info_lbl.pack(anchor=tk.W, pady=(0, 16))
+        info_lbl.pack(anchor=tk.W, pady=(0, 18))
 
         # Botonera de acciones
         btn_frame = tk.Frame(content_frame, bg="#f8fafc")
@@ -214,46 +217,46 @@ class ServerManagerGUI:
 
         self.btn_open_browser = tk.Button(
             btn_frame,
-            text="🌐 Abrir Navegador",
-            font=("Segoe UI", 9, "bold"),
+            text="Abrir Navegador",
+            font=("Segoe UI", 9.5, "bold"),
             bg="#0056b3",
             fg="white",
             activebackground="#004494",
             activeforeground="white",
             relief=tk.FLAT,
-            padx=12,
-            pady=6,
+            padx=14,
+            pady=7,
             cursor="hand2",
             command=self.open_browser
         )
-        self.btn_open_browser.pack(side=tk.LEFT, padx=(0, 8))
+        self.btn_open_browser.pack(side=tk.LEFT, padx=(0, 10))
 
         self.btn_open_logs = tk.Button(
             btn_frame,
-            text="📂 Ver Logs",
-            font=("Segoe UI", 9),
+            text="Carpeta de Logs",
+            font=("Segoe UI", 9.5),
             bg="#e2e8f0",
             fg="#1e293b",
             activebackground="#cbd5e1",
             relief=tk.FLAT,
-            padx=12,
-            pady=6,
+            padx=14,
+            pady=7,
             cursor="hand2",
             command=self.open_logs_folder
         )
-        self.btn_open_logs.pack(side=tk.LEFT, padx=(0, 8))
+        self.btn_open_logs.pack(side=tk.LEFT, padx=(0, 10))
 
         self.btn_stop = tk.Button(
             btn_frame,
-            text="🛑 Detener Servidor",
-            font=("Segoe UI", 9, "bold"),
+            text="Detener Servidor",
+            font=("Segoe UI", 9.5, "bold"),
             bg="#dc2626",
             fg="white",
             activebackground="#b91c1c",
             activeforeground="white",
             relief=tk.FLAT,
             padx=14,
-            pady=6,
+            pady=7,
             cursor="hand2",
             command=self.on_request_close
         )

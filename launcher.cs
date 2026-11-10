@@ -79,127 +79,204 @@ namespace AsistenciaNURR.Launcher
 
         private void InitializeComponents()
         {
+            float dpiScale = 1.0f;
+            using (Graphics g = this.CreateGraphics())
+            {
+                dpiScale = g.DpiX / 96.0f;
+            }
+            Func<int, int> S = (px) => (int)Math.Round(px * dpiScale);
+
             this.Text = "Asistencia-NURR - Servidor (Perfil Administrador)";
-            this.ClientSize = new Size(530, 360);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(248, 250, 252);
-            this.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular, GraphicsUnit.Point);
 
-            // Banner Superior Institucional
-            Panel headerPanel = new Panel();
-            headerPanel.Dock = DockStyle.Top;
-            headerPanel.Height = 75;
+            // Contenedor principal vertical (Header + Content) sin superposiciones
+            TableLayoutPanel mainLayout = new TableLayoutPanel();
+            mainLayout.Location = new Point(0, 0);
+            mainLayout.ColumnCount = 1;
+            mainLayout.RowCount = 2;
+            mainLayout.AutoSize = true;
+            mainLayout.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            mainLayout.Margin = new Padding(0);
+            mainLayout.Padding = new Padding(0);
+            mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+
+            // 1. Banner Superior Institucional
+            TableLayoutPanel headerPanel = new TableLayoutPanel();
+            headerPanel.Dock = DockStyle.Fill;
+            headerPanel.ColumnCount = 1;
+            headerPanel.RowCount = 2;
+            headerPanel.AutoSize = true;
+            headerPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             headerPanel.BackColor = Color.FromArgb(0, 86, 179);
+            headerPanel.Padding = new Padding(S(24), S(16), S(24), S(16));
+            headerPanel.Margin = new Padding(0);
 
             Label titleLabel = new Label();
             titleLabel.Text = "SISTEMA DE ASISTENCIA AUTOMATIZADA - ULA-NURR";
-            titleLabel.Font = new Font("Segoe UI", 11.5F, FontStyle.Bold);
+            titleLabel.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point);
             titleLabel.ForeColor = Color.White;
             titleLabel.AutoSize = true;
-            titleLabel.Location = new Point(20, 14);
+            titleLabel.Margin = new Padding(0, 0, 0, S(4));
 
             Label subtitleLabel = new Label();
-            subtitleLabel.Text = "Unidad de Soporte Técnico | Control de Administrador (Consola Oculta)";
-            subtitleLabel.Font = new Font("Segoe UI", 9F);
-            subtitleLabel.ForeColor = Color.FromArgb(224, 231, 255);
+            subtitleLabel.Text = "Unidad de Soporte Técnico  |  Control de Administrador (Consola Oculta)";
+            subtitleLabel.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular, GraphicsUnit.Point);
+            subtitleLabel.ForeColor = Color.FromArgb(219, 234, 254);
             subtitleLabel.AutoSize = true;
-            subtitleLabel.Location = new Point(20, 42);
+            subtitleLabel.Margin = new Padding(0);
 
-            headerPanel.Controls.Add(titleLabel);
-            headerPanel.Controls.Add(subtitleLabel);
-            this.Controls.Add(headerPanel);
+            headerPanel.Controls.Add(titleLabel, 0, 0);
+            headerPanel.Controls.Add(subtitleLabel, 0, 1);
+            mainLayout.Controls.Add(headerPanel, 0, 0);
 
-            // Contenedor Central
-            Panel contentPanel = new Panel();
+            // 2. Contenedor Central de Contenido
+            TableLayoutPanel contentPanel = new TableLayoutPanel();
             contentPanel.Dock = DockStyle.Fill;
-            contentPanel.Padding = new Padding(24, 18, 24, 18);
+            contentPanel.ColumnCount = 1;
+            contentPanel.RowCount = 3;
+            contentPanel.AutoSize = true;
+            contentPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            contentPanel.Padding = new Padding(S(24), S(20), S(24), S(22));
+            contentPanel.Margin = new Padding(0);
             contentPanel.BackColor = Color.FromArgb(248, 250, 252);
+            contentPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
-            // Tarjeta de Estado
-            Panel statusCard = new Panel();
-            statusCard.Location = new Point(24, 20);
-            statusCard.Size = new Size(482, 105);
+            // Tarjeta de Estado (borde sutil con panel contenedor)
+            Panel statusBorder = new Panel();
+            statusBorder.Dock = DockStyle.Top;
+            statusBorder.AutoSize = true;
+            statusBorder.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            statusBorder.MinimumSize = new Size(S(585), 0);
+            statusBorder.BackColor = Color.FromArgb(203, 213, 225);
+            statusBorder.Padding = new Padding(1);
+            statusBorder.Margin = new Padding(0, 0, 0, S(14));
+
+            TableLayoutPanel statusCard = new TableLayoutPanel();
+            statusCard.Dock = DockStyle.Fill;
+            statusCard.ColumnCount = 1;
+            statusCard.RowCount = 3;
+            statusCard.AutoSize = true;
+            statusCard.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             statusCard.BackColor = Color.White;
-            statusCard.BorderStyle = BorderStyle.FixedSingle;
+            statusCard.Padding = new Padding(S(16), S(14), S(16), S(14));
+            statusCard.Margin = new Padding(0);
 
             lblStatus = new Label();
             lblStatus.Text = "● Inicializando entorno y servidor en segundo plano...";
-            lblStatus.Font = new Font("Segoe UI", 10.5F, FontStyle.Bold);
+            lblStatus.Font = new Font("Segoe UI", 10.5F, FontStyle.Bold, GraphicsUnit.Point);
             lblStatus.ForeColor = Color.FromArgb(217, 119, 6);
-            lblStatus.Location = new Point(14, 12);
             lblStatus.AutoSize = true;
+            lblStatus.Margin = new Padding(0, 0, 0, S(8));
 
             lblUrl = new Label();
             lblUrl.Text = "Dirección Local: " + targetUrl;
-            lblUrl.Font = new Font("Segoe UI", 9.5F);
-            lblUrl.ForeColor = Color.FromArgb(71, 85, 105);
-            lblUrl.Location = new Point(14, 42);
+            lblUrl.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular, GraphicsUnit.Point);
+            lblUrl.ForeColor = Color.FromArgb(51, 65, 85);
             lblUrl.AutoSize = true;
+            lblUrl.Margin = new Padding(0, 0, 0, S(6));
 
             lblLogs = new Label();
             lblLogs.Text = "Directorio de logs: " + logsDir;
-            lblLogs.Font = new Font("Segoe UI", 8.5F);
+            lblLogs.Font = new Font("Segoe UI", 8.5F, FontStyle.Regular, GraphicsUnit.Point);
             lblLogs.ForeColor = Color.FromArgb(100, 116, 139);
-            lblLogs.Location = new Point(14, 70);
             lblLogs.AutoSize = true;
+            lblLogs.MaximumSize = new Size(S(575), 0);
+            lblLogs.Margin = new Padding(0);
 
-            statusCard.Controls.Add(lblStatus);
-            statusCard.Controls.Add(lblUrl);
-            statusCard.Controls.Add(lblLogs);
-            contentPanel.Controls.Add(statusCard);
+            statusCard.Controls.Add(lblStatus, 0, 0);
+            statusCard.Controls.Add(lblUrl, 0, 1);
+            statusCard.Controls.Add(lblLogs, 0, 2);
+            statusBorder.Controls.Add(statusCard);
+            contentPanel.Controls.Add(statusBorder, 0, 0);
 
             // Mensaje informativo
             Label infoLabel = new Label();
-            infoLabel.Text = "La consola de comandos está oculta para mantener la operación limpia y protegida.\r\nUtilice esta interfaz o el perfil de administrador en la aplicación web para detener el servicio.";
-            infoLabel.Font = new Font("Segoe UI", 8.5F);
-            infoLabel.ForeColor = Color.FromArgb(100, 116, 139);
-            infoLabel.Location = new Point(24, 140);
-            infoLabel.Size = new Size(482, 35);
-            contentPanel.Controls.Add(infoLabel);
+            infoLabel.Text = "La consola de comandos permanece oculta para mantener una operación limpia y segura.\r\nUtilice los botones inferiores o el perfil de administrador en la web para detener el servidor.";
+            infoLabel.Font = new Font("Segoe UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            infoLabel.ForeColor = Color.FromArgb(71, 85, 105);
+            infoLabel.AutoSize = true;
+            infoLabel.MaximumSize = new Size(S(595), 0);
+            infoLabel.Margin = new Padding(S(2), 0, S(2), S(18));
+            contentPanel.Controls.Add(infoLabel, 0, 1);
 
-            // Botonera Inferior
+            // Botonera Inferior alineada con espaciado automático
+            TableLayoutPanel buttonBar = new TableLayoutPanel();
+            buttonBar.Dock = DockStyle.Fill;
+            buttonBar.ColumnCount = 4;
+            buttonBar.RowCount = 1;
+            buttonBar.AutoSize = true;
+            buttonBar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            buttonBar.Margin = new Padding(0);
+            buttonBar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            buttonBar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            buttonBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            buttonBar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+
             btnOpenBrowser = new Button();
-            btnOpenBrowser.Text = "🌐 Abrir Navegador";
-            btnOpenBrowser.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btnOpenBrowser.Text = "Abrir Navegador";
+            btnOpenBrowser.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold, GraphicsUnit.Point);
             btnOpenBrowser.BackColor = Color.FromArgb(0, 86, 179);
             btnOpenBrowser.ForeColor = Color.White;
             btnOpenBrowser.FlatStyle = FlatStyle.Flat;
             btnOpenBrowser.FlatAppearance.BorderSize = 0;
-            btnOpenBrowser.Size = new Size(140, 36);
-            btnOpenBrowser.Location = new Point(24, 205);
+            btnOpenBrowser.AutoSize = true;
+            btnOpenBrowser.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnOpenBrowser.Padding = new Padding(S(14), S(7), S(14), S(7));
+            btnOpenBrowser.MinimumSize = new Size(S(145), S(38));
+            btnOpenBrowser.Margin = new Padding(0, 0, S(10), 0);
             btnOpenBrowser.Cursor = Cursors.Hand;
             btnOpenBrowser.Click += (s, e) => OpenBrowser();
-            contentPanel.Controls.Add(btnOpenBrowser);
 
             btnOpenLogs = new Button();
-            btnOpenLogs.Text = "📂 Ver Logs";
-            btnOpenLogs.Font = new Font("Segoe UI", 9F);
+            btnOpenLogs.Text = "Carpeta de Logs";
+            btnOpenLogs.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular, GraphicsUnit.Point);
             btnOpenLogs.BackColor = Color.FromArgb(226, 232, 240);
             btnOpenLogs.ForeColor = Color.FromArgb(30, 41, 59);
             btnOpenLogs.FlatStyle = FlatStyle.Flat;
             btnOpenLogs.FlatAppearance.BorderSize = 0;
-            btnOpenLogs.Size = new Size(110, 36);
-            btnOpenLogs.Location = new Point(172, 205);
+            btnOpenLogs.AutoSize = true;
+            btnOpenLogs.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnOpenLogs.Padding = new Padding(S(14), S(7), S(14), S(7));
+            btnOpenLogs.MinimumSize = new Size(S(135), S(38));
+            btnOpenLogs.Margin = new Padding(0, 0, S(10), 0);
             btnOpenLogs.Cursor = Cursors.Hand;
             btnOpenLogs.Click += (s, e) => OpenLogsFolder();
-            contentPanel.Controls.Add(btnOpenLogs);
+
+            Panel spacer = new Panel();
+            spacer.Size = new Size(S(24), S(10));
+            spacer.Margin = new Padding(0);
 
             btnStopServer = new Button();
-            btnStopServer.Text = "🛑 Detener Servidor";
-            btnStopServer.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            btnStopServer.Text = "Detener Servidor";
+            btnStopServer.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold, GraphicsUnit.Point);
             btnStopServer.BackColor = Color.FromArgb(220, 38, 38);
             btnStopServer.ForeColor = Color.White;
             btnStopServer.FlatStyle = FlatStyle.Flat;
             btnStopServer.FlatAppearance.BorderSize = 0;
-            btnStopServer.Size = new Size(145, 36);
-            btnStopServer.Location = new Point(361, 205);
+            btnStopServer.AutoSize = true;
+            btnStopServer.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            btnStopServer.Padding = new Padding(S(14), S(7), S(14), S(7));
+            btnStopServer.MinimumSize = new Size(S(145), S(38));
+            btnStopServer.Margin = new Padding(0);
             btnStopServer.Cursor = Cursors.Hand;
             btnStopServer.Click += (s, e) => RequestShutdown();
-            contentPanel.Controls.Add(btnStopServer);
 
-            this.Controls.Add(contentPanel);
+            buttonBar.Controls.Add(btnOpenBrowser, 0, 0);
+            buttonBar.Controls.Add(btnOpenLogs, 1, 0);
+            buttonBar.Controls.Add(spacer, 2, 0);
+            buttonBar.Controls.Add(btnStopServer, 3, 0);
+            contentPanel.Controls.Add(buttonBar, 0, 2);
+
+            mainLayout.Controls.Add(contentPanel, 0, 1);
+            this.Controls.Add(mainLayout);
+            this.ClientSize = mainLayout.GetPreferredSize(Size.Empty);
+            mainLayout.Dock = DockStyle.Fill;
 
             // Timer de monitoreo continuo
             monitorTimer = new System.Windows.Forms.Timer();
@@ -459,6 +536,22 @@ namespace AsistenciaNURR.Launcher
             lblStatus.ForeColor = Color.FromArgb(22, 163, 74);
             btnOpenBrowser.Enabled = true;
             monitorTimer.Start();
+
+            string previewPath = Environment.GetEnvironmentVariable("ASISTENCIA_CAPTURE_PREVIEW");
+            if (!string.IsNullOrEmpty(previewPath))
+            {
+                try
+                {
+                    this.PerformLayout();
+                    this.Refresh();
+                    using (Bitmap bmp = new Bitmap(this.Width, this.Height))
+                    {
+                        this.DrawToBitmap(bmp, new Rectangle(0, 0, this.Width, this.Height));
+                        bmp.Save(previewPath, System.Drawing.Imaging.ImageFormat.Png);
+                    }
+                }
+                catch { }
+            }
         }
 
         private void MonitorTimer_Tick(object sender, EventArgs e)
