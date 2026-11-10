@@ -176,7 +176,7 @@ def test_redes_full_routes(auth_headers):
     res_del = client.delete(f"/api/v1/redes/{red_id}", headers=auth_headers)
     assert res_del.status_code == 200
 
-# ================= 6. USUARIOS Y CREDENCIALES (RUTAS COMPLETAS) =================
+# ================= 6. USUARIOS Y BIOMETRÍA FACIAL (RUTAS COMPLETAS) =================
 
 def test_usuarios_and_credentials_full_routes(auth_headers):
     # Listar Roles disponibles
@@ -211,7 +211,6 @@ def test_usuarios_and_credentials_full_routes(auth_headers):
     assert res_create.status_code == 201
     user_data = res_create.json()
     user_id = user_data["id"]
-    qr_init = user_data["codigo_qr"]
 
     # Detalle Usuario
     res_get = client.get(f"/api/v1/usuarios/{user_id}", headers=auth_headers)
@@ -242,23 +241,6 @@ def test_usuarios_and_credentials_full_routes(auth_headers):
     }, headers=auth_headers)
     assert res_bio.status_code == 200
     assert res_bio.json()["tiene_biometria"] is True
-
-    # Regenerar QR
-    res_regen = client.post(f"/api/v1/usuarios/{user_id}/regenerar-qr", headers=auth_headers)
-    assert res_regen.status_code == 200
-    assert res_regen.json()["codigo_qr"] != qr_init
-
-    # Descargar QR PNG
-    res_qr_png = client.get(f"/api/v1/usuarios/{user_id}/credencial-qr", headers=auth_headers)
-    assert res_qr_png.status_code == 200
-    assert res_qr_png.headers["content-type"] == "image/png"
-    assert res_qr_png.content.startswith(b"\x89PNG")
-
-    # Descargar Carnet PDF
-    res_pdf = client.get(f"/api/v1/usuarios/{user_id}/credencial-pdf", headers=auth_headers)
-    assert res_pdf.status_code == 200
-    assert res_pdf.headers["content-type"] == "application/pdf"
-    assert res_pdf.content.startswith(b"%PDF")
 
     # Borrado físico (sin asistencias aún)
     res_del = client.delete(f"/api/v1/usuarios/{user_id}", headers=auth_headers)

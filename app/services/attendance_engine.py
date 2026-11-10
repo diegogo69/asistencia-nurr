@@ -21,41 +21,28 @@ def calculate_euclidean_distance(v1: List[float], v2: List[float]) -> float:
 def verify_user_identity(
     usuario: Usuario,
     metodo: MetodoValidacion,
-    vector_facial: Optional[List[float]],
-    codigo_qr: Optional[str]
+    vector_facial: Optional[List[float]]
 ) -> Tuple[bool, str]:
-    """Verifica la identidad del usuario mediante reconocimiento facial o código QR."""
-    if metodo == MetodoValidacion.FACIAL:
-        if not vector_facial or len(vector_facial) != 128:
-            return False, "Vector facial inválido o no suministrado por la cámara."
+    """Verifica la identidad del usuario mediante reconocimiento facial."""
+    if metodo != MetodoValidacion.FACIAL:
+        return False, "Método de autenticación no admitido. La aplicación opera exclusivamente con reconocimiento facial."
 
-        if not usuario.vector_biometrico:
-            return False, "El usuario no tiene enrolado su vector biométrico facial. Utilice el código QR de contingencia."
+    if not vector_facial or len(vector_facial) != 128:
+        return False, "Vector facial inválido o no suministrado por la cámara."
 
-        try:
-            stored_vector = json.loads(usuario.vector_biometrico)
-        except Exception:
-            return False, "Error al decodificar el vector biométrico almacenado."
+    if not usuario.vector_biometrico:
+        return False, "El usuario no tiene enrolado su vector biométrico facial. Debe realizar el registro biométrico previo."
 
-        distancia = calculate_euclidean_distance(vector_facial, stored_vector)
-        if distancia <= UMBRAL_DISTANCIA_FACIAL:
-            return True, f"Identidad verificada exitosamente por reconocimiento facial (Distancia: {distancia:.2f})."
-        else:
-            return False, f"Autenticación biométrica fallida: el rostro no coincide (Distancia: {distancia:.2f} > {UMBRAL_DISTANCIA_FACIAL})."
+    try:
+        stored_vector = json.loads(usuario.vector_biometrico)
+    except Exception:
+        return False, "Error al decodificar el vector biométrico almacenado."
 
-    elif metodo == MetodoValidacion.QR:
-        if not codigo_qr:
-            return False, "Código QR de credencial no suministrado."
-
-        if not usuario.codigo_qr:
-            return False, "El usuario no tiene una credencial QR asignada."
-
-        if usuario.codigo_qr.strip() == codigo_qr.strip():
-            return True, "Identidad verificada exitosamente mediante credencial QR."
-        else:
-            return False, "Código QR de credencial inválido o no reconocido."
-
-    return False, "Método de autenticación no admitido."
+    distancia = calculate_euclidean_distance(vector_facial, stored_vector)
+    if distancia <= UMBRAL_DISTANCIA_FACIAL:
+        return True, f"Identidad verificada exitosamente por reconocimiento facial (Distancia: {distancia:.2f})."
+    else:
+        return False, f"Autenticación biométrica fallida: el rostro no coincide (Distancia: {distancia:.2f} > {UMBRAL_DISTANCIA_FACIAL})."
 
 def calculate_attendance_status(usuario: Usuario, current_dt: datetime) -> EstadoCumplimiento:
     """Calcula el estado de cumplimiento (puntual, retraso, anticipada) contrastando contra el horario."""

@@ -19,11 +19,6 @@ from app.schemas.usuario import (
     UsuarioCreate, UsuarioUpdate, UsuarioResponse,
     UsuarioListResponse, CheckDocumentoResponse, BiometriaEnrollRequest
 )
-from app.services.qr_service import (
-    generate_unique_qr_code,
-    generate_qr_image_bytes,
-    generate_credencial_pdf
-)
 
 router = APIRouter(prefix="/usuarios", tags=["Gestión de Usuarios"])
 
@@ -41,7 +36,6 @@ def format_usuario_response(u: Usuario) -> UsuarioResponse:
         horario_id=u.horario_id,
         horario=u.horario.nombre if u.horario else None,
         tiene_biometria=bool(u.vector_biometrico),
-        codigo_qr=u.codigo_qr,
         tiene_password=bool(u.password_hash),
         activo=u.activo
     )
@@ -179,9 +173,6 @@ def create_usuario(
     if data.horario_id and not db.query(HorarioPlantilla).filter(HorarioPlantilla.id == data.horario_id).first():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="La plantilla de horario seleccionada no existe.")
 
-    # Generar código QR único
-    qr_token = generate_unique_qr_code(db)
-
     nuevo_usuario = Usuario(
         documento_identidad=doc_clean,
         nombre=data.nombre.strip(),
@@ -190,7 +181,6 @@ def create_usuario(
         departamento_id=data.departamento_id,
         horario_id=data.horario_id,
         password_hash=password_hash,
-        codigo_qr=qr_token,
         activo=data.activo
     )
     db.add(nuevo_usuario)
@@ -316,48 +306,3 @@ def enroll_biometria(
     db.commit()
     db.refresh(usuario)
     return format_usuario_response(usuario)
-
-@router.post("/{id}/regenerar-qr", response_model=UsuarioResponse, summary="Regenerar credencial QR por extravío")
-def regenerate_qr(
-    id: int,
-    db: Session = Depends(get_db),
-    admin: Usuario = Depends(get_current_admin)
-):
-    usuario = db.query(Usuario).filter(Usuario.id == id).first()
-    if not usuario:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
-
-    usuario.codigo_qr = generate_unique_qr_code(db)
-    db.commit()
-    db.refresh(usuario)
-    return format_usuario_response(usuario)
-
-@router.get("/{id}/credencial-qr", summary="Descargar imagen PNG del código QR")
-def get_qr_image(
-    id: int,
-    db: Session = Depends(get_db),
-    admin: Usuario = Depends(get_current_admin)
-):
-    usuario = db.query(Usuario).filter(Usuario.id == id).first()
-    if not usuario or not usuario.codigo_qr:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Código QR no disponible para este usuario.")
-
-    img_bytes = generate_qr_image_bytes(usuario.codigo_qr)
-    return Response(content=img_bytes, media_type="image/png")
-
-@router.get("/{id}/credencial-pdf", summary="Descargar carnet imprimible en PDF con membrete y QR")
-def get_credencial_pdf(
-    id: int,
-    db: Session = Depends(get_db),
-    admin: Usuario = Depends(get_current_admin)
-):
-    usuario = db.query(Usuario).filter(Usuario.id == id).first()
-    if not usuario:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
-
-    pdf_bytes = generate_credencial_pdf(usuario)
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; filename=credencial_{usuario.documento_identidad}.pdf"}
-    )

@@ -38,7 +38,7 @@
 
         <section class="content-panel">
             <p style="margin-bottom: 20px; color: var(--text-light);">
-                Administre los expedientes del personal, asignación de horarios, unidades organizacionales y estados biométricos / QR.
+                Administre los expedientes del personal, asignación de horarios, unidades organizacionales y estados biométricos faciales.
             </p>
 
             <div class="toolbar" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
@@ -71,7 +71,7 @@
                             <th>Rol</th>
                             <th>Departamento</th>
                             <th>Horario</th>
-                            <th>Biometría / QR</th>
+                            <th>Biometría Facial</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -158,7 +158,7 @@
                     <div class="form-group" id="pwd_group" style="border-top: 1px solid #eee; padding-top: 15px; margin-top: 10px;">
                         <label for="password">Contraseña (Solo requerida para Administradores/Supervisores)</label>
                         <input type="password" id="password" placeholder="Dejar en blanco para conservar contraseña actual">
-                        <small style="color: var(--text-light); font-size: 12px;">Para empleados regulares que solo usan el kiosco biométrico/QR, la contraseña es opcional.</small>
+                        <small style="color: var(--text-light); font-size: 12px;">Para empleados regulares que solo usan el kiosco biométrico facial, la contraseña es opcional.</small>
                     </div>
 
                 </div>
@@ -253,7 +253,6 @@
                     let actionButtons = `
                         <button class="btn btn-secondary btn-icon" onclick='openEditModal(${uDataJson})'>Editar</button>
                         <a href="biometria.html?id=${u.id}" class="btn btn-secondary btn-icon" title="Enrolar Rostro">Biometría</a>
-                        <a href="credencial.html?id=${u.id}" class="btn btn-secondary btn-icon" title="Credencial QR">Carnet</a>
                     `;
 
                     if (u.activo) {
@@ -277,10 +276,6 @@
                             <td>
                                 <span title="Rostro registrado: ${u.tiene_biometria ? 'Sí' : 'No'}" style="cursor:help;">
                                     ${u.tiene_biometria ? '👤 Enrolado' : '❌ Sin rostro'}
-                                </span>
-                                <br>
-                                <span title="Código QR: ${u.codigo_qr ? 'Sí' : 'No'}" style="cursor:help; font-size:11px; color:var(--text-light);">
-                                    ${u.codigo_qr ? '🏷️ QR Activo' : '⚠️ Sin QR'}
                                 </span>
                             </td>
                             <td>

@@ -101,7 +101,7 @@ def verificar_usuario(
         tiene_biometria=tiene_bio,
         horario=usuario.horario.nombre if usuario.horario else "Sin horario asignado",
         accion_esperada=accion,
-        mensaje="Usuario validado. Proceda con la autenticación facial o código QR."
+        mensaje="Usuario validado. Proceda con la autenticación facial."
     )
 
 @router.post("/registrar", response_model=MarcacionResponse, summary="Registrar marcación de asistencia")
@@ -111,7 +111,7 @@ def registrar_marcacion(
     db: Session = Depends(get_db),
     client_ip: str = Depends(check_authorized_network)
 ):
-    """Procesa y valida la marcación de asistencia con biometría facial o código QR de contingencia."""
+    """Procesa y valida la marcación de asistencia mediante biometría facial."""
     doc_clean = data.documento_identidad
     usuario = db.query(Usuario).filter(func.lower(Usuario.documento_identidad) == doc_clean.lower()).first()
 
@@ -127,12 +127,11 @@ def registrar_marcacion(
             detail="Su cuenta se encuentra inhabilitada. Contacte al coordinador."
         )
 
-    # 1. Verificar identidad (Facial o QR)
+    # 1. Verificar identidad facial
     es_valido, motivo = verify_user_identity(
         usuario=usuario,
         metodo=data.metodo,
-        vector_facial=data.vector_facial,
-        codigo_qr=data.codigo_qr
+        vector_facial=data.vector_facial
     )
 
     if not es_valido:

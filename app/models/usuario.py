@@ -13,7 +13,6 @@ class Usuario(Base):
     nombre = Column(String(100), nullable=False)
     apellido = Column(String(100), nullable=False)
     vector_biometrico = Column(Text, nullable=True)  # Vector 128D serializado en JSON (face-api.js)
-    codigo_qr = Column(String(255), unique=True, nullable=True, index=True)
     password_hash = Column(String(255), nullable=True)
     activo = Column(Boolean, default=True, nullable=False)
 

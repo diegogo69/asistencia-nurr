@@ -135,7 +135,7 @@
             <p style="color: var(--text-light); font-size: 13px;">Soporte Técnico Institucional</p>
         </div>
 
-        <!-- Paso 1: Identificación por Cédula o QR -->
+        <!-- Paso 1: Identificación por Documento de Identidad -->
         <div id="step-identify">
             <div class="form-group" style="text-align: left; margin-bottom: 15px;">
                 <label for="doc_numero" style="font-weight: 600;">Ingrese su Documento de Identidad:</label>
@@ -150,19 +150,6 @@
                     <button id="btn-verificar-doc" class="btn btn-primary" style="padding: 0 24px; font-weight: bold; font-size: 16px;">Verificar</button>
                 </div>
                 <small id="doc_error" class="ci-error" style="font-size: 13px;"></small>
-            </div>
-
-            <div style="margin: 20px 0; border-top: 1px solid #eee; position: relative;">
-                <span style="position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: white; padding: 0 10px; color: #888; font-size: 12px;">O CONTINGENCIA</span>
-            </div>
-
-            <button id="btn-toggle-qr-input" class="btn btn-secondary" style="width: 100%;">Escanear / Ingresar Token QR</button>
-            <div id="qr-input-container" style="display: none; margin-top: 15px; text-align: left;">
-                <label for="qr_token" style="font-size: 13px; font-weight: 600;">Token de Credencial QR:</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="text" id="qr_token" placeholder="Hash o lectura de carnet..." style="padding: 10px; font-family: monospace; flex: 1;">
-                    <button id="btn-marcar-qr" class="btn btn-primary">Registrar con QR</button>
-                </div>
             </div>
         </div>
 
@@ -374,34 +361,6 @@
             }
         }
 
-        async function registrarQR() {
-            const doc = (verifiedUser && verifiedUser.documento_identidad)
-                ? verifiedUser.documento_identidad
-                : (cedulaCtrl ? cedulaCtrl.getFormatted(true) : '');
-            const qr_hash = document.getElementById('qr_token').value.trim();
-
-            if (!doc) {
-                API.showToast('Por favor ingrese su cédula arriba.', 'warning');
-                return;
-            }
-            if (!qr_hash) {
-                API.showToast('Por favor ingrese el código/token QR.', 'warning');
-                return;
-            }
-
-            try {
-                const res = await API.registrarMarcacion({
-                    documento_identidad: doc,
-                    metodo: 'qr',
-                    codigo_qr: qr_hash,
-                    qr_hash: qr_hash
-                });
-                mostrarResultado(res);
-            } catch (err) {
-                API.showToast(`Error en marcación QR: ${err.message}`, 'error');
-            }
-        }
-
         function mostrarResultado(data) {
             stopCamera();
             document.getElementById('step-camera').style.display = 'none';
@@ -421,8 +380,7 @@
             estadoSpan.textContent = estadoVal;
             estadoSpan.style.color = estadoVal === 'Puntual' ? '#2e7d32' : (estadoVal === 'Retraso' ? '#ef6c00' : '#0d47a1');
 
-            const metodoVal = data.metodo_validacion || data.metodo || 'facial';
-            document.getElementById('res-metodo').textContent = metodoVal === 'facial' ? 'Reconocimiento Facial' : 'Credencial QR';
+            document.getElementById('res-metodo').textContent = 'Reconocimiento Facial';
 
             if (data.observacion || data.mensaje) {
                 document.getElementById('res-obs-container').style.display = 'block';
@@ -452,7 +410,6 @@
             verifiedUser = null;
             document.getElementById('modal-resultado').style.display = 'none';
             if (cedulaCtrl) cedulaCtrl.clear();
-            document.getElementById('qr_token').value = '';
             document.getElementById('step-camera').style.display = 'none';
             document.getElementById('step-identify').style.display = 'block';
             const btn = document.getElementById('btn-verificar-doc');
@@ -482,16 +439,6 @@
             document.getElementById('btn-verificar-doc').addEventListener('click', verificarDocumento);
             document.getElementById('doc_numero').addEventListener('keyup', (e) => {
                 if (e.key === 'Enter') verificarDocumento();
-            });
-
-            document.getElementById('btn-toggle-qr-input').addEventListener('click', () => {
-                const c = document.getElementById('qr-input-container');
-                c.style.display = c.style.display === 'none' ? 'block' : 'none';
-            });
-
-            document.getElementById('btn-marcar-qr').addEventListener('click', registrarQR);
-            document.getElementById('qr_token').addEventListener('keyup', (e) => {
-                if (e.key === 'Enter') registrarQR();
             });
 
             document.getElementById('btn-confirmar-facial').addEventListener('click', registrarFacial);

@@ -84,7 +84,6 @@ class UsuarioResponse(BaseModel):
     horario: Optional[str] = None
     horario_nombre: Optional[str] = None
     tiene_biometria: bool = False
-    codigo_qr: Optional[str] = None
     tiene_password: bool = False
     activo: bool = True
 

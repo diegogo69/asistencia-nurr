@@ -5,9 +5,8 @@ from app.core.documento import format_documento_identidad
 
 class MarcacionRequest(BaseModel):
     documento_identidad: str = Field(..., description="Documento de identidad del usuario")
-    metodo: MetodoValidacion = Field(MetodoValidacion.FACIAL, description="Método de validación: facial o qr")
+    metodo: MetodoValidacion = Field(MetodoValidacion.FACIAL, description="Método de validación: facial")
     vector_facial: Optional[List[float]] = Field(None, description="Vector de 128 floats capturado por face-api.js")
-    codigo_qr: Optional[str] = Field(None, description="Hash/token de la credencial QR escaneada")
 
     @field_validator("documento_identidad", mode="before")
     @classmethod
@@ -22,13 +21,8 @@ class MarcacionRequest(BaseModel):
         if isinstance(data, dict):
             if "vector_facial" not in data and "descriptor_facial" in data:
                 data["vector_facial"] = data["descriptor_facial"]
-            if "codigo_qr" not in data and "qr_hash" in data:
-                data["codigo_qr"] = data["qr_hash"]
             if "metodo" not in data:
-                if data.get("codigo_qr"):
-                    data["metodo"] = MetodoValidacion.QR
-                else:
-                    data["metodo"] = MetodoValidacion.FACIAL
+                data["metodo"] = MetodoValidacion.FACIAL
         return data
 
 class MarcacionResponse(BaseModel):

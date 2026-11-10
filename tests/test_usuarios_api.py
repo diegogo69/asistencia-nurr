@@ -45,7 +45,6 @@ def test_usuarios_crud_and_credentials(auth_headers):
     user_data = create_res.json()
     user_id = user_data["id"]
     assert user_data["documento_identidad"] == doc_nuevo
-    assert user_data["codigo_qr"] is not None
     assert user_data["tiene_biometria"] is False
 
     # 2. Enrolamiento Biométrico con vector 128D (simulando face-api.js)
@@ -56,26 +55,7 @@ def test_usuarios_crud_and_credentials(auth_headers):
     assert enroll_res.status_code == 200
     assert enroll_res.json()["tiene_biometria"] is True
 
-    # 3. Regenerar Código QR
-    old_qr = user_data["codigo_qr"]
-    regen_res = client.post(f"/api/v1/usuarios/{user_id}/regenerar-qr", headers=auth_headers)
-    assert regen_res.status_code == 200
-    new_qr = regen_res.json()["codigo_qr"]
-    assert new_qr != old_qr
-
-    # 4. Descargar imagen del QR
-    qr_img_res = client.get(f"/api/v1/usuarios/{user_id}/credencial-qr", headers=auth_headers)
-    assert qr_img_res.status_code == 200
-    assert qr_img_res.headers["content-type"] == "image/png"
-    assert qr_img_res.content.startswith(b"\x89PNG")
-
-    # 5. Descargar carnet en PDF
-    pdf_res = client.get(f"/api/v1/usuarios/{user_id}/credencial-pdf", headers=auth_headers)
-    assert pdf_res.status_code == 200
-    assert pdf_res.headers["content-type"] == "application/pdf"
-    assert pdf_res.content.startswith(b"%PDF")
-
-    # 6. Borrado físico de usuario sin asistencias
+    # 3. Borrado físico de usuario sin asistencias
     del_res = client.delete(f"/api/v1/usuarios/{user_id}", headers=auth_headers)
     assert del_res.status_code == 200
     assert del_res.json()["tipo_borrado"] == "fisico"
