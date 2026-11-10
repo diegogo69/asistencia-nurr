@@ -109,7 +109,6 @@ def seed_database():
                 departamento_id=depto_soporte.id,
                 horario_id=horario_fijo.id,
                 password_hash=get_password_hash("admin1234"),
-                codigo_qr=f"QR-ADMIN-{uuid.uuid4().hex[:12].upper()}",
                 activo=True
             )
             db.add(admin_user)

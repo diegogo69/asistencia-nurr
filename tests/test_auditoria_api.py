@@ -33,7 +33,7 @@ def test_auditoria_incomplete_detection_and_resolution(auth_headers):
             hora_salida=None,
             estado_cumplimiento=EstadoCumplimiento.PENDIENTE,
             ip_registro_entrada="127.0.0.1",
-            metodo_validacion=MetodoValidacion.QR
+            metodo_validacion=MetodoValidacion.FACIAL
         )
         db.add(asistencia_pasada)
         db.commit()

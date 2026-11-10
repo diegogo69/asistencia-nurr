@@ -10,7 +10,6 @@ cryptography>=43.0.1
 python-jose[cryptography]>=3.3.0
 bcrypt>=4.2.0
 numpy>=2.1.0
-qrcode[pil]>=8.0
 reportlab>=4.2.5
 openpyxl>=3.1.5
 pytest>=8.3.3

@@ -12,7 +12,6 @@ class EstadoCumplimiento(str, enum.Enum):
 
 class MetodoValidacion(str, enum.Enum):
     FACIAL = "facial"
-    QR = "qr"
 
 class Asistencia(Base):
     __tablename__ = "asistencias"

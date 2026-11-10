@@ -23,7 +23,7 @@ def test_marcacion_blocked_on_unauthorized_ip():
     assert res.status_code == 403
     assert "fuera del rango de red autorizado" in res.json()["detail"]
 
-def test_marcacion_flow_facial_and_qr(auth_headers):
+def test_marcacion_flow_facial(auth_headers):
     # 1. Crear un usuario de prueba
     dept_res = client.get("/api/v1/departamentos", headers=auth_headers)
     dept_id = dept_res.json()["items"][0]["id"]
@@ -40,7 +40,6 @@ def test_marcacion_flow_facial_and_qr(auth_headers):
     assert user_res.status_code == 201
     user_data = user_res.json()
     user_id = user_data["id"]
-    qr_code = user_data["codigo_qr"]
 
     # 2. Enrolar vector facial de prueba (128 floats)
     sample_vector = [0.1] * 128
@@ -72,11 +71,11 @@ def test_marcacion_flow_facial_and_qr(auth_headers):
     assert entrada_data["metodo_validacion"] == "facial"
     assert entrada_data["documento_identidad"] == doc
 
-    # 5. Marcación de SALIDA usando Contingencia QR
+    # 5. Marcación de SALIDA usando Reconocimiento Facial
     salida_res = client.post("/api/v1/marcacion/registrar", json={
         "documento_identidad": doc,
-        "metodo": "qr",
-        "codigo_qr": qr_code
+        "metodo": "facial",
+        "vector_facial": live_captured_vector
     })
     assert salida_res.status_code == 200
     salida_data = salida_res.json()
@@ -85,8 +84,8 @@ def test_marcacion_flow_facial_and_qr(auth_headers):
     # 6. Intento de marcación adicional el mismo día -> COMPLETADO
     extra_res = client.post("/api/v1/marcacion/registrar", json={
         "documento_identidad": doc,
-        "metodo": "qr",
-        "codigo_qr": qr_code
+        "metodo": "facial",
+        "vector_facial": live_captured_vector
     })
     assert extra_res.status_code == 200
     assert extra_res.json()["tipo_evento"] == "COMPLETADO"

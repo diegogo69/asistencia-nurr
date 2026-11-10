@@ -105,15 +105,26 @@ def export_pdf(
         if depto:
             depto_nombre = depto.nombre
 
+    usuario_nombre = None
+    if usuario_id:
+        user_obj = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+        if user_obj:
+            usuario_nombre = f"{user_obj.nombre_completo} (C.I. {user_obj.documento_identidad})"
+
     pdf_bytes = generate_pdf_report(
         asistencias=records,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
-        depto_nombre=depto_nombre
+        depto_nombre=depto_nombre,
+        usuario_nombre=usuario_nombre
     )
+
+    desde_str = fecha_desde.strftime('%Y%m%d') if fecha_desde else 'inicio'
+    hasta_str = fecha_hasta.strftime('%Y%m%d') if fecha_hasta else 'actual'
+    filename = f"reporte_asistencia_nurr_{desde_str}_a_{hasta_str}.pdf"
 
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": "inline; filename=reporte_asistencia_nurr.pdf"}
+        headers={"Content-Disposition": f'inline; filename="{filename}"'}
     )
