@@ -12,11 +12,16 @@ if not exist "venv\Scripts\activate.bat" (
     echo [!] No se encontro el entorno virtual en 'venv'.
     echo [*] Creando entorno virtual...
     python -m venv venv
-    call venv\Scripts\activate.bat
+)
+
+call venv\Scripts\activate.bat
+
+python -c "import uvicorn" 2>nul
+if errorlevel 1 (
+    echo [!] Dependencias incompletas o ausentes en el entorno virtual.
     echo [*] Instalando dependencias desde requirements.txt...
-    pip install -r requirements.txt
-) else (
-    call venv\Scripts\activate.bat
+    python -m pip install --upgrade pip
+    python -m pip install -r requirements.txt
 )
 
 if not exist "certs\cert.pem" (

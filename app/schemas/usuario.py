@@ -1,11 +1,15 @@
+import re
 from typing import Optional, List, Any
 from pydantic import BaseModel, Field, ConfigDict, model_validator, field_validator
 from app.core.documento import format_documento_identidad
+
+EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 class UsuarioBase(BaseModel):
     documento_identidad: str = Field(..., description="Cédula de identidad (ej: v-12345678)")
     nombre: str = Field(..., min_length=2, max_length=100, description="Nombres del usuario")
     apellido: str = Field(..., min_length=2, max_length=100, description="Apellidos del usuario")
+    email: str = Field(..., min_length=5, max_length=255, description="Correo electrónico obligatorio del usuario")
     rol_id: int = Field(..., description="ID del rol asignado")
     departamento_id: int = Field(..., description="ID de la unidad organizacional asignada")
     horario_id: Optional[int] = Field(None, description="ID de la plantilla de horario asignada")
@@ -18,6 +22,16 @@ class UsuarioBase(BaseModel):
             raise ValueError("El documento de identidad es requerido.")
         return format_documento_identidad(str(v))
 
+    @field_validator("email", mode="before")
+    @classmethod
+    def validate_email(cls, v: Any) -> str:
+        if v is None or not str(v).strip():
+            raise ValueError("El correo electrónico es requerido.")
+        cleaned = str(v).strip().lower()
+        if not EMAIL_REGEX.match(cleaned):
+            raise ValueError("El formato del correo electrónico es inválido (ej: usuario@ula.ve).")
+        return cleaned
+
     @model_validator(mode="before")
     @classmethod
     def handle_aliases_and_types(cls, data: Any) -> Any:
@@ -27,6 +41,11 @@ class UsuarioBase(BaseModel):
                 data["nombre"] = data["nombres"]
             if "apellido" not in data and "apellidos" in data:
                 data["apellido"] = data["apellidos"]
+            if "email" not in data:
+                if "correo" in data:
+                    data["email"] = data["correo"]
+                elif "correo_electronico" in data:
+                    data["email"] = data["correo_electronico"]
             # Convertir vacíos a None en horario_id
             if "horario_id" in data and (data["horario_id"] == "" or data["horario_id"] is None):
                 data["horario_id"] = None
@@ -37,6 +56,7 @@ class UsuarioCreate(UsuarioBase):
 
 class UsuarioUpdate(BaseModel):
     documento_identidad: Optional[str] = None
+    email: Optional[str] = None
     nombre: Optional[str] = Field(None, min_length=2, max_length=100)
     apellido: Optional[str] = Field(None, min_length=2, max_length=100)
     rol_id: Optional[int] = None
@@ -52,6 +72,16 @@ class UsuarioUpdate(BaseModel):
             return None
         return format_documento_identidad(str(v))
 
+    @field_validator("email", mode="before")
+    @classmethod
+    def validate_email_update(cls, v: Any) -> Optional[str]:
+        if v is None or v == "":
+            return None
+        cleaned = str(v).strip().lower()
+        if not EMAIL_REGEX.match(cleaned):
+            raise ValueError("El formato del correo electrónico es inválido (ej: usuario@ula.ve).")
+        return cleaned
+
     @model_validator(mode="before")
     @classmethod
     def handle_aliases_and_types(cls, data: Any) -> Any:
@@ -60,6 +90,11 @@ class UsuarioUpdate(BaseModel):
                 data["nombre"] = data["nombres"]
             if "apellido" not in data and "apellidos" in data:
                 data["apellido"] = data["apellidos"]
+            if "email" not in data:
+                if "correo" in data:
+                    data["email"] = data["correo"]
+                elif "correo_electronico" in data:
+                    data["email"] = data["correo_electronico"]
             if "horario_id" in data and (data["horario_id"] == "" or data["horario_id"] is None):
                 data["horario_id"] = None
         return data
@@ -69,6 +104,7 @@ class UsuarioResponse(BaseModel):
 
     id: int
     documento_identidad: str
+    email: Optional[str] = None
     nombre: str
     apellido: str
     nombre_completo: str
@@ -85,6 +121,7 @@ class UsuarioResponse(BaseModel):
     horario_nombre: Optional[str] = None
     tiene_biometria: bool = False
     tiene_password: bool = False
+    debe_cambiar_password: bool = False
     activo: bool = True
 
     @model_validator(mode="after")

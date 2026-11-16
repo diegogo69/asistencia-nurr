@@ -19,6 +19,7 @@ from app.schemas.usuario import (
     UsuarioCreate, UsuarioUpdate, UsuarioResponse,
     UsuarioListResponse, CheckDocumentoResponse, BiometriaEnrollRequest
 )
+from app.schemas.auth import AdminCambiarPasswordRequest
 
 router = APIRouter(prefix="/usuarios", tags=["Gestión de Usuarios"])
 
@@ -26,6 +27,7 @@ def format_usuario_response(u: Usuario) -> UsuarioResponse:
     return UsuarioResponse(
         id=u.id,
         documento_identidad=u.documento_identidad,
+        email=u.email,
         nombre=u.nombre,
         apellido=u.apellido,
         nombre_completo=u.nombre_completo,
@@ -37,6 +39,7 @@ def format_usuario_response(u: Usuario) -> UsuarioResponse:
         horario=u.horario.nombre if u.horario else None,
         tiene_biometria=bool(u.vector_biometrico),
         tiene_password=bool(u.password_hash),
+        debe_cambiar_password=u.debe_cambiar_password,
         activo=u.activo
     )
 
@@ -98,7 +101,8 @@ def list_usuarios(
         cond = (
             (Usuario.documento_identidad.ilike(term)) |
             (Usuario.nombre.ilike(term)) |
-            (Usuario.apellido.ilike(term))
+            (Usuario.apellido.ilike(term)) |
+            (Usuario.email.ilike(term))
         )
         digits_only = re.sub(r"\D", "", q)
         if len(digits_only) >= 3:
@@ -150,6 +154,15 @@ def create_usuario(
             detail=f"El documento de identidad '{doc_clean}' ya se encuentra registrado."
         )
 
+    # Validar unicidad del correo electrónico obligatorio
+    email_clean = data.email.strip().lower()
+    existing_email = db.query(Usuario).filter(func.lower(Usuario.email) == email_clean).first()
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"El correo electrónico '{email_clean}' ya se encuentra registrado por otro usuario."
+        )
+
     # Validar rol y requerimiento de contraseña
     rol = db.query(Rol).filter(Rol.id == data.rol_id).first()
     if not rol:
@@ -164,7 +177,10 @@ def create_usuario(
             )
         password_hash = get_password_hash(data.password)
     elif data.password:
-        password_hash = get_password_hash(data.password)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"El rol '{rol.nombre}' no utiliza contraseña de acceso. Este tipo de usuario utiliza exclusivamente autenticación biométrica facial en el punto de marcación."
+        )
 
     # Validar departamento y horario
     if not db.query(Departamento).filter(Departamento.id == data.departamento_id).first():
@@ -175,12 +191,14 @@ def create_usuario(
 
     nuevo_usuario = Usuario(
         documento_identidad=doc_clean,
+        email=email_clean,
         nombre=data.nombre.strip(),
         apellido=data.apellido.strip(),
         rol_id=data.rol_id,
         departamento_id=data.departamento_id,
         horario_id=data.horario_id,
         password_hash=password_hash,
+        debe_cambiar_password=False,
         activo=data.activo
     )
     db.add(nuevo_usuario)
@@ -212,6 +230,19 @@ def update_usuario(
             )
         usuario.documento_identidad = doc_clean
 
+    if data.email is not None:
+        email_clean = data.email.strip().lower()
+        existing_email = db.query(Usuario).filter(
+            func.lower(Usuario.email) == email_clean,
+            Usuario.id != id
+        ).first()
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"El correo electrónico '{email_clean}' ya está en uso por otro usuario."
+            )
+        usuario.email = email_clean
+
     if data.nombre is not None:
         usuario.nombre = data.nombre.strip()
     if data.apellido is not None:
@@ -230,11 +261,42 @@ def update_usuario(
         usuario.rol_id = data.rol_id
 
     if data.password:
+        target_rol = db.query(Rol).filter(Rol.id == usuario.rol_id).first()
+        if not target_rol or not target_rol.requiere_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"No se puede asignar contraseña al usuario. El rol asignado ('{target_rol.nombre if target_rol else 'Sin rol'}') no requiere contraseña de gestión (autenticación exclusivamente biométrica facial)."
+            )
         usuario.password_hash = get_password_hash(data.password)
+        usuario.debe_cambiar_password = False
 
     db.commit()
     db.refresh(usuario)
     return format_usuario_response(usuario)
+
+@router.post("/{id}/cambiar-password", summary="Cambiar contraseña de un usuario administrativo")
+def cambiar_password_usuario(
+    id: int,
+    data: AdminCambiarPasswordRequest,
+    db: Session = Depends(get_db),
+    admin: Usuario = Depends(get_current_admin)
+):
+    """Permite al administrador cambiar la contraseña de un usuario que posee rol de gestión (Administrador/Coordinador)."""
+    usuario = db.query(Usuario).filter(Usuario.id == id).first()
+    if not usuario:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado.")
+
+    if not usuario.rol or not usuario.rol.requiere_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"El rol del usuario ('{usuario.rol.nombre if usuario.rol else 'Sin rol'}') no requiere contraseña de acceso; este usuario utiliza autenticación biométrica facial."
+        )
+
+    usuario.password_hash = get_password_hash(data.nuevo_password)
+    usuario.debe_cambiar_password = False
+    db.commit()
+
+    return {"message": f"Contraseña actualizada exitosamente para el usuario '{usuario.nombre_completo}'."}
 
 @router.patch("/{id}/toggle-status", response_model=UsuarioResponse, summary="Alternar estado activo/inactivo de usuario")
 def toggle_usuario_status(

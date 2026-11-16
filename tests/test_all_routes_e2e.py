@@ -202,6 +202,7 @@ def test_usuarios_and_credentials_full_routes(auth_headers):
     # Crear Usuario
     res_create = client.post("/api/v1/usuarios", json={
         "documento_identidad": doc_nuevo,
+        "email": f"beatriz_{doc_nuevo.replace('-', '_')}@ula.ve",
         "nombre": "Beatriz",
         "apellido": "Paredes",
         "rol_id": 3,

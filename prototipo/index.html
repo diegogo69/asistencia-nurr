@@ -33,6 +33,7 @@
             <h1>Bienvenido al Panel de Control</h1>
             <div class="user-info">
                 <span id="user-display">Cargando usuario...</span>
+                <button id="btn-cambiar-pwd" class="btn btn-secondary" style="margin-left: 8px;">Cambiar Contraseña</button>
                 <button id="btn-logout" class="btn btn-secondary">Cerrar Sesión</button>
             </div>
         </header>
@@ -69,6 +70,40 @@
         </section>
     </main>
 
+    <!-- Modal Cambiar Contraseña Propia -->
+    <div class="modal-overlay" id="modal-cambiar-password" style="display: none;">
+        <div class="modal" style="max-width: 450px; width: 90%;">
+            <div class="modal-header" style="background: var(--primary-color); color: white; border-radius: 8px 8px 0 0; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: white; font-size: 16px; margin: 0;">🔒 Cambiar Contraseña Personal</h3>
+                <button type="button" class="close-btn" id="btn-close-cambiar-pwd" style="color: white; background: none; border: none; font-size: 22px; cursor: pointer;">&times;</button>
+            </div>
+            <form id="form-cambiar-password">
+                <div class="modal-body" style="padding: 20px; text-align: left;">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="pwd_actual" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Contraseña Actual <span style="color:red">*</span></label>
+                        <input type="password" id="pwd_actual" placeholder="Ingrese su contraseña actual" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="pwd_nueva" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Nueva Contraseña <span style="color:red">*</span></label>
+                        <input type="password" id="pwd_nueva" placeholder="Mínimo 4 caracteres" minlength="4" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="pwd_confirmar" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Confirmar Nueva Contraseña <span style="color:red">*</span></label>
+                        <input type="password" id="pwd_confirmar" placeholder="Repita la nueva contraseña" minlength="4" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                    </div>
+
+                    <div id="pwd_error" style="color: var(--danger-color); font-size: 12.5px; display: none; margin-bottom: 10px;"></div>
+                </div>
+                <div class="modal-footer" style="padding: 12px 20px; background: #fafafa; border-top: 1px solid var(--border-color); border-radius: 0 0 8px 8px; display: flex; justify-content: space-between; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" id="btn-cancel-cambiar-pwd" style="flex: 1;">Cancelar</button>
+                    <button type="submit" id="btn-submit-cambiar-pwd" class="btn btn-primary" style="flex: 2;">Actualizar Contraseña</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="js/api.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
@@ -80,11 +115,71 @@
 
             const user = API.getUser();
             if (user) {
+                if (user.debe_cambiar_password) {
+                    API.showToast('Debe configurar su nueva contraseña y correo antes de continuar.', 'warning');
+                    window.location.href = 'login.html';
+                    return;
+                }
                 document.getElementById('user-display').textContent = `${user.nombre_completo} (${user.rol})`;
             }
 
             document.getElementById('btn-logout').addEventListener('click', () => {
                 API.logout();
+            });
+
+            // Modal Cambiar Contraseña
+            const modalPwd = document.getElementById('modal-cambiar-password');
+            document.getElementById('btn-cambiar-pwd').addEventListener('click', () => {
+                document.getElementById('pwd_actual').value = '';
+                document.getElementById('pwd_nueva').value = '';
+                document.getElementById('pwd_confirmar').value = '';
+                document.getElementById('pwd_error').style.display = 'none';
+                modalPwd.style.display = 'flex';
+            });
+
+            document.getElementById('btn-close-cambiar-pwd').addEventListener('click', () => {
+                modalPwd.style.display = 'none';
+            });
+            document.getElementById('btn-cancel-cambiar-pwd').addEventListener('click', () => {
+                modalPwd.style.display = 'none';
+            });
+
+            document.getElementById('form-cambiar-password').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const actual = document.getElementById('pwd_actual').value;
+                const nueva = document.getElementById('pwd_nueva').value;
+                const confirm = document.getElementById('pwd_confirmar').value;
+                const errDiv = document.getElementById('pwd_error');
+                const btn = document.getElementById('btn-submit-cambiar-pwd');
+
+                errDiv.style.display = 'none';
+
+                if (nueva === actual) {
+                    errDiv.textContent = 'La nueva contraseña debe ser diferente a la actual.';
+                    errDiv.style.display = 'block';
+                    return;
+                }
+
+                if (nueva !== confirm) {
+                    errDiv.textContent = 'La confirmación no coincide con la nueva contraseña.';
+                    errDiv.style.display = 'block';
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.textContent = 'Actualizando...';
+
+                try {
+                    const res = await API.cambiarPassword(actual, nueva, confirm);
+                    API.showToast(res.message || 'Contraseña actualizada exitosamente.', 'success');
+                    modalPwd.style.display = 'none';
+                } catch (err) {
+                    errDiv.textContent = err.message || 'Error al actualizar la contraseña.';
+                    errDiv.style.display = 'block';
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Actualizar Contraseña';
+                }
             });
         });
     </script>

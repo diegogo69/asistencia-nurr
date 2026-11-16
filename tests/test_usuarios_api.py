@@ -35,6 +35,7 @@ def test_usuarios_crud_and_credentials(auth_headers):
     doc_nuevo = f"v-{uuid.uuid4().int % 90000000 + 10000000}"
     create_res = client.post("/api/v1/usuarios", json={
         "documento_identidad": doc_nuevo,
+        "email": f"pedro_{uuid.uuid4().hex[:6]}@ula.ve",
         "nombre": "Pedro",
         "apellido": "Alvarado",
         "rol_id": 3,  # Técnico Contratado (no requiere password)
@@ -67,6 +68,7 @@ def test_usuarios_create_with_nombres_apellidos_aliases(auth_headers):
     doc_nuevo = f"v-{uuid.uuid4().int % 90000000 + 10000000}"
     create_res = client.post("/api/v1/usuarios", json={
         "documento_identidad": doc_nuevo,
+        "email": f"carlos_{uuid.uuid4().hex[:6]}@ula.ve",
         "nombres": "Carlos",
         "apellidos": "Mendoza",
         "rol_id": 3,

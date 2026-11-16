@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, Text, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -10,10 +10,14 @@ class Usuario(Base):
     rol_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
     departamento_id = Column(Integer, ForeignKey("departamentos.id"), nullable=False)
     documento_identidad = Column(String(20), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=True, index=True)
     nombre = Column(String(100), nullable=False)
     apellido = Column(String(100), nullable=False)
     vector_biometrico = Column(Text, nullable=True)  # Vector 128D serializado en JSON (face-api.js)
     password_hash = Column(String(255), nullable=True)
+    debe_cambiar_password = Column(Boolean, default=False, nullable=False)
+    reset_password_token = Column(String(255), nullable=True, index=True)
+    reset_password_expires = Column(DateTime, nullable=True)
     activo = Column(Boolean, default=True, nullable=False)
 
     departamento = relationship("Departamento", back_populates="usuarios")
