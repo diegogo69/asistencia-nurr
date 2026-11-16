@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime, timezone
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,8 +41,13 @@ def health_check():
     }
 
 # Montar archivos estáticos del prototipo para pruebas y visualización web
-prototipo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "prototipo"))
-if os.path.exists(prototipo_dir):
+candidate_dirs = [
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "prototipo")),
+    os.path.abspath(os.path.join(getattr(sys, "_MEIPASS", ""), "prototipo")) if hasattr(sys, "_MEIPASS") else None,
+    os.path.abspath(os.path.join(os.getcwd(), "prototipo")),
+]
+prototipo_dir = next((d for d in candidate_dirs if d and os.path.exists(d)), None)
+if prototipo_dir:
     app.mount("/static", StaticFiles(directory=prototipo_dir, html=True), name="static")
 
     @app.get("/", include_in_schema=False)
