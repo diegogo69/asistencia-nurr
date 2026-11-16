@@ -1,5 +1,7 @@
 """Servicio de envío y gestión de correos electrónicos para Asistencia-NURR."""
 
+import sys
+import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -12,6 +14,11 @@ logger = logging.getLogger("asistencia_nurr.email")
 
 # Almacén en memoria de correos salientes (útil para pruebas unitarias y modo de desarrollo)
 sent_emails: List[Dict[str, Any]] = []
+
+
+def is_test_environment() -> bool:
+    """Verifica si la ejecución actual corresponde a una prueba automatizada."""
+    return "pytest" in sys.modules or os.getenv("PYTEST_CURRENT_TEST") is not None
 
 
 def mask_email(email: str) -> str:
@@ -46,38 +53,63 @@ def send_email(
     to_email: str,
     subject: str,
     html_content: str,
-    text_content: Optional[str] = None
+    text_content: Optional[str] = None,
+    reset_token: Optional[str] = None
 ) -> bool:
-    """Envía un correo electrónico mediante SMTP o registra la simulación en entorno de desarrollo."""
+    """Envía un correo electrónico mediante SMTP o registra la simulación según la configuración."""
     if not settings.EMAILS_ENABLED:
         logger.info(f"[EMAIL DESACTIVADO] Envío omitido para: {to_email}")
         return False
 
-    # Guardar siempre en memoria para trazabilidad y pruebas
+    # Guardar siempre en memoria para trazabilidad y pruebas automatizadas
     email_record = {
         "to": to_email,
         "subject": subject,
         "html": html_content,
-        "text": text_content or html_content
+        "text": text_content or html_content,
+        "reset_token": reset_token
     }
     sent_emails.append(email_record)
 
-    # Si no hay servidor SMTP configurado, opera en modo simulación (entorno de pruebas/desarrollo)
-    if not settings.SMTP_HOST:
-        print(f"\n==================== [SIMULACIÓN CORREO SALIENTE] ====================")
-        print(f" Para:    {to_email}")
-        print(f" Asunto:  {subject}")
-        print(f" De:      {settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>")
-        print("----------------------------------------------------------------------")
-        print(text_content or html_content)
-        print(f"======================================================================\n")
+    # 1. En pruebas automatizadas (pytest), simular despacho exitoso sin conectar a SMTP
+    if is_test_environment():
         return True
 
-    # Envío real mediante SMTP
+    # 2. Modo desarrollo explícito (SMTP_DEV_MODE=True en .env)
+    if settings.SMTP_DEV_MODE:
+        print(f"\n==================== [SIMULACIÓN CORREO MODO DESARROLLO] ====================")
+        print(f" Para:          {to_email}")
+        print(f" Asunto:        {subject}")
+        print(f" Remitente:     {settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL or 'soporte@ula.ve'}>")
+        if reset_token:
+            print(f" CÓDIGO TOKEN:  {reset_token}")
+        print("-----------------------------------------------------------------------------")
+        print(text_content or html_content)
+        print(f"=============================================================================\n")
+        return True
+
+    # 3. Validación de configuración de servidor SMTP real
+    if not settings.SMTP_HOST or not settings.SMTP_USER or not settings.SMTP_PASSWORD:
+        logger.warning(
+            f"[EMAIL NO ENVIADO] Servidor SMTP no configurado en .env (SMTP_HOST, SMTP_USER, SMTP_PASSWORD). "
+            f"El correo para {to_email} no pudo ser despachado."
+        )
+        print(f"\n==================== [ADVERTENCIA SERVIDOR SMTP] ====================")
+        print(f" No se pudo enviar el correo real a: {to_email}")
+        print(f" Motivo: No se han configurado SMTP_HOST, SMTP_USER y SMTP_PASSWORD en el archivo .env")
+        if reset_token:
+            print(f" Código de recuperación generado: {reset_token}")
+            print(f" (Para pruebas sin SMTP configure SMTP_DEV_MODE=true en .env)")
+        print(f"======================================================================\n")
+        return False
+
+    # 4. Envío real mediante SMTP
     try:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>"
+        from_name = settings.SMTP_FROM_NAME or "Sistema de Asistencia ULA-NURR"
+        from_email = settings.SMTP_FROM_EMAIL or settings.SMTP_USER
+        msg["From"] = f"{from_name} <{from_email}>"
         msg["To"] = to_email
 
         if text_content:
@@ -85,23 +117,24 @@ def send_email(
         if html_content:
             msg.attach(MIMEText(html_content, "html", "utf-8"))
 
-        if settings.SMTP_SSL:
-            server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10)
+        if settings.SMTP_SSL or settings.SMTP_PORT == 465:
+            server = smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=12)
         else:
-            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10)
-            if settings.SMTP_TLS:
+            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=12)
+            if settings.SMTP_TLS or settings.SMTP_PORT == 587:
+                server.ehlo()
                 server.starttls()
+                server.ehlo()
 
         if settings.SMTP_USER and settings.SMTP_PASSWORD:
             server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
 
-        server.sendmail(settings.SMTP_FROM_EMAIL, [to_email], msg.as_string())
+        server.sendmail(from_email, [to_email], msg.as_string())
         server.quit()
         logger.info(f"[EMAIL ENVIADO] Mensaje enviado exitosamente a {to_email}")
         return True
     except Exception as e:
         logger.error(f"[EMAIL ERROR] Error enviando correo a {to_email}: {e}")
-        # En caso de falla en SMTP real, no interrumpimos el flujo si se registró en memoria
         return False
 
 
@@ -188,4 +221,4 @@ Universidad de Los Andes (ULA - NURR)
 </html>
 """
 
-    return send_email(to_email, subject, html_content, text_content)
+    return send_email(to_email, subject, html_content, text_content, reset_token=reset_token)

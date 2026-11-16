@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False
     EMAILS_ENABLED: bool = True
+    SMTP_DEV_MODE: bool = False  # Si es True, simula envío e imprime el código en consola (útil para pruebas locales sin SMTP)
 
     model_config = SettingsConfigDict(
         env_file=".env",

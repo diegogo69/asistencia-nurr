@@ -118,8 +118,8 @@
                         </div>
                         
                         <div class="form-group" style="margin-bottom: 15px;">
-                            <label for="recuperar_token" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Token o Código de Recuperación <span style="color:red">*</span></label>
-                            <input type="text" id="recuperar_token" placeholder="Pegue el token recibido en el correo" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                            <label for="recuperar_token" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Código de Recuperación <span style="color:red">*</span></label>
+                            <input type="text" id="recuperar_token" placeholder="Ingrese el código de 6 dígitos recibido por correo" maxlength="32" autocomplete="off" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; letter-spacing: 1px;" required>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px;">
@@ -235,6 +235,9 @@
             document.getElementById('recuperar_identificador').value = '';
             document.getElementById('recuperar_error_1').style.display = 'none';
             document.getElementById('recuperar_error_2').style.display = 'none';
+            document.getElementById('recuperar_token').value = '';
+            document.getElementById('recuperar_nuevo_password').value = '';
+            document.getElementById('recuperar_confirm_password').value = '';
             paso1.style.display = 'block';
             paso2.style.display = 'none';
             modalRecuperar.style.display = 'flex';
@@ -242,10 +245,20 @@
 
         document.getElementById('btn-close-recuperar').addEventListener('click', () => {
             modalRecuperar.style.display = 'none';
+            document.getElementById('form-recuperar-solicitar').reset();
+            document.getElementById('form-recuperar-confirmar').reset();
+            document.getElementById('recuperar_token').value = '';
+            document.getElementById('recuperar_nuevo_password').value = '';
+            document.getElementById('recuperar_confirm_password').value = '';
         });
 
         document.getElementById('btn-cancel-recuperar').addEventListener('click', () => {
             modalRecuperar.style.display = 'none';
+            document.getElementById('form-recuperar-solicitar').reset();
+            document.getElementById('form-recuperar-confirmar').reset();
+            document.getElementById('recuperar_token').value = '';
+            document.getElementById('recuperar_nuevo_password').value = '';
+            document.getElementById('recuperar_confirm_password').value = '';
         });
 
         document.getElementById('btn-volver-paso-1').addEventListener('click', () => {
@@ -267,12 +280,14 @@
             try {
                 const res = await API.solicitarRecuperacion(ident);
                 document.getElementById('email-dest-enmascarado').textContent = res.email_enmascarado || 'su correo registrado';
-                if (res.reset_token) {
-                    document.getElementById('recuperar_token').value = res.reset_token;
-                }
+                // Por seguridad: el campo de código se mantiene siempre limpio para entrada manual desde el correo
+                document.getElementById('recuperar_token').value = '';
+                document.getElementById('recuperar_nuevo_password').value = '';
+                document.getElementById('recuperar_confirm_password').value = '';
                 API.showToast('Mensaje de recuperación enviado.', 'success');
                 paso1.style.display = 'none';
                 paso2.style.display = 'block';
+                document.getElementById('recuperar_token').focus();
             } catch (err) {
                 errDiv.textContent = err.message || 'Error al solicitar el mensaje de recuperación.';
                 errDiv.style.display = 'block';
@@ -282,7 +297,7 @@
             }
         });
 
-        // Restablecer contraseña con token
+        // Restablecer contraseña con código
         document.getElementById('form-recuperar-confirmar').addEventListener('submit', async (e) => {
             e.preventDefault();
             const token = document.getElementById('recuperar_token').value.trim();
@@ -304,9 +319,18 @@
 
             try {
                 const res = await API.restablecerPassword(token, nuevoPassword, confirmarPassword);
-                API.showToast('¡Contraseña restablecida con éxito! Ya puede iniciar sesión.', 'success');
+                API.showToast('¡Contraseña restablecida con éxito! Ya puede iniciar sesión con sus nuevas credenciales.', 'success');
+                
+                // Limpieza de seguridad: no dejar contraseñas ni tokens en el DOM
+                document.getElementById('form-recuperar-confirmar').reset();
+                document.getElementById('form-recuperar-solicitar').reset();
+                document.getElementById('recuperar_token').value = '';
+                document.getElementById('recuperar_nuevo_password').value = '';
+                document.getElementById('recuperar_confirm_password').value = '';
+                document.getElementById('password').value = ''; // NUNCA escribir la nueva contraseña en el formulario de login
+                
                 modalRecuperar.style.display = 'none';
-                document.getElementById('password').value = nuevoPassword;
+                document.getElementById('password').focus();
             } catch (err) {
                 errDiv.textContent = err.message || 'Error al restablecer la contraseña.';
                 errDiv.style.display = 'block';

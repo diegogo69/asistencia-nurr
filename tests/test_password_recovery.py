@@ -44,17 +44,20 @@ def base_dept_and_roles():
 
 @pytest.fixture
 def admin_headers():
-    # Login con el administrador preconfigurado
+    # Asegurar contraseña conocida para el administrador preconfigurado
+    db = SessionLocal()
+    admin_u = db.query(Usuario).filter(Usuario.documento_identidad == "v-00000000").first()
+    if admin_u:
+        from app.core.security import get_password_hash
+        admin_u.password_hash = get_password_hash("admin1234")
+        admin_u.debe_cambiar_password = False
+        db.commit()
+    db.close()
+
     res = client.post("/api/v1/auth/login", json={
         "documento_identidad": "v-00000000",
         "password": "admin1234"
     })
-    if res.status_code != 200:
-        # En caso de que ya haya cambiado contraseña en otra prueba
-        res = client.post("/api/v1/auth/login", json={
-            "documento_identidad": "v-00000000",
-            "password": "AdminNuevaClave2026!"
-        })
     token = res.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 
@@ -277,17 +280,22 @@ def test_password_recovery_full_flow():
     assert "correo electrónico" in data["message"]
     assert "email_enmascarado" in data
     assert "@ula.ve" in data["email_enmascarado"]
-    token = data["reset_token"]
+    
+    # SEGURIDAD CRÍTICA: El token de recuperación NUNCA debe viajar en la respuesta HTTP
+    assert "reset_token" not in data
 
-    # Verificar que el servicio despachó el correo
+    # Verificar que el servicio despachó el correo y contiene el código de 6 dígitos
     emails = get_sent_emails()
     assert len(emails) >= 1
     assert emails[-1]["to"] == "admin_recuperacion@ula.ve"
+    token = emails[-1].get("reset_token")
+    assert token is not None
+    assert len(token) == 6
     assert token in emails[-1]["text"]
 
-    # 2. Verificar validez del token
+    # 2. Verificar validez del código (probando también con espacios en blanco que el usuario pueda ingresar)
     verif_res = client.post("/api/v1/auth/recuperar-password/verificar", json={
-        "token": token
+        "token": f" {token} "
     })
     assert verif_res.status_code == 200
     assert verif_res.json()["valido"] is True

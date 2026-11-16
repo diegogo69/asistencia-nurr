@@ -196,23 +196,37 @@ def solicitar_recuperacion_password(
             detail="El usuario no tiene un correo electrónico registrado para el envío del mensaje de recuperación. Contacte al administrador."
         )
 
-    reset_token = secrets.token_urlsafe(32)
+    # Generar código de recuperación numérico de 6 dígitos
+    reset_token = f"{secrets.randbelow(900000) + 100000}"
     usuario.reset_password_token = reset_token
     usuario.reset_password_expires = datetime.now(timezone.utc) + timedelta(minutes=30)
     db.commit()
 
     # Enviar correo de recuperación
-    send_password_reset_email(
+    email_sent = send_password_reset_email(
         to_email=usuario.email,
         nombre_usuario=usuario.nombre_completo,
         reset_token=reset_token,
         expires_minutes=30
     )
 
+    if not email_sent:
+        usuario.reset_password_token = None
+        usuario.reset_password_expires = None
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "No se pudo despachar el mensaje a su correo electrónico. "
+                "El servidor de correo (SMTP) no está configurado o no se pudo establecer conexión. "
+                "Verifique la configuración SMTP en el archivo .env o active SMTP_DEV_MODE=true para pruebas locales."
+            )
+        )
+
+    # Por razones de seguridad, el token NUNCA se expone en la respuesta HTTP
     return {
         "message": "Se ha enviado un mensaje de recuperación con las instrucciones a su correo electrónico registrado.",
-        "email_enmascarado": mask_email(usuario.email),
-        "reset_token": reset_token
+        "email_enmascarado": mask_email(usuario.email)
     }
 
 @router.post("/recuperar-password/verificar", summary="Verificar validez de token de recuperación")
@@ -220,12 +234,13 @@ def verificar_token_recuperacion(
     data: VerificarTokenRequest,
     db: Session = Depends(get_db)
 ):
-    """Verifica si el token de recuperación proporcionado es válido y no ha expirado."""
-    usuario = db.query(Usuario).filter(Usuario.reset_password_token == data.token.strip()).first()
+    """Verifica si el token o código de recuperación proporcionado es válido y no ha expirado."""
+    token_clean = data.token.strip().replace(" ", "").replace("-", "")
+    usuario = db.query(Usuario).filter(Usuario.reset_password_token == token_clean).first()
     if not usuario or not usuario.reset_password_expires:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El token de recuperación es inválido o no existe."
+            detail="El código de recuperación es inválido o no existe."
         )
 
     exp = usuario.reset_password_expires
@@ -235,7 +250,7 @@ def verificar_token_recuperacion(
     if exp < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El token de recuperación ha expirado. Solicite un nuevo mensaje de recuperación."
+            detail="El código de recuperación ha expirado. Solicite un nuevo mensaje de recuperación."
         )
 
     return {
@@ -250,12 +265,13 @@ def restablecer_password(
     data: RestablecerPasswordRequest,
     db: Session = Depends(get_db)
 ):
-    """Restablece la contraseña del usuario utilizando el token válido enviado por correo electrónico."""
-    usuario = db.query(Usuario).filter(Usuario.reset_password_token == data.token.strip()).first()
+    """Restablece la contraseña del usuario utilizando el token o código válido enviado por correo electrónico."""
+    token_clean = data.token.strip().replace(" ", "").replace("-", "")
+    usuario = db.query(Usuario).filter(Usuario.reset_password_token == token_clean).first()
     if not usuario or not usuario.reset_password_expires:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El token de recuperación es inválido o no existe."
+            detail="El código de recuperación es inválido o no existe."
         )
 
     exp = usuario.reset_password_expires
@@ -265,7 +281,7 @@ def restablecer_password(
     if exp < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="El token de recuperación ha expirado. Solicite un nuevo mensaje de recuperación."
+            detail="El código de recuperación ha expirado. Solicite un nuevo mensaje de recuperación."
         )
 
     usuario.password_hash = get_password_hash(data.nuevo_password)
