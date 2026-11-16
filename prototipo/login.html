@@ -28,14 +28,50 @@
                 
                 <div class="form-group" style="text-align: left;">
                     <label for="password">Contraseña</label>
-                    <input type="password" id="password" placeholder="Ingrese su contraseña" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" placeholder="Ingrese su contraseña" required autocomplete="current-password">
+                        <button type="button" id="btn-toggle-password" class="btn-toggle-password" aria-label="Mostrar u ocultar contraseña" title="Mostrar u ocultar contraseña" tabindex="-1">
+                            <svg id="eye-icon-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg id="eye-icon-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <small id="password-error" class="input-error-msg"></small>
+                    <small id="caps-lock-warning" style="display: none; color: #b45309; font-size: 11.5px; margin-top: 4px; font-weight: 500;">
+                        ⚠️ Bloq Mayús (Caps Lock) está activado
+                    </small>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; margin-top: -8px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: flex-end; margin-top: -6px; margin-bottom: 14px;">
                     <a href="#" id="link-recuperar-pwd" style="color: var(--primary-color); font-size: 13px; text-decoration: none; font-weight: 500;">¿Olvidó su contraseña?</a>
                 </div>
+
+                <!-- Banner de retroalimentación ante error de autenticación -->
+                <div id="login-feedback" class="login-feedback" role="alert" aria-live="assertive" style="display: none;">
+                    <div class="feedback-icon-box">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                    </div>
+                    <div class="feedback-body">
+                        <div id="login-feedback-title" class="feedback-title">Contraseña incorrecta</div>
+                        <div id="login-feedback-text" class="feedback-text">
+                            La contraseña suministrada es incorrecta. Verifique sus credenciales e intente nuevamente.
+                        </div>
+                        <div id="login-feedback-action" class="feedback-action">
+                            <a href="#" id="feedback-recuperar-link">¿Olvidó su contraseña? Recupérela aquí →</a>
+                        </div>
+                    </div>
+                </div>
                 
-                <button type="submit" id="btn-submit" class="btn btn-primary" style="width: 100%; margin-top: 5px;">Iniciar Sesión</button>
+                <button type="submit" id="btn-submit" class="btn btn-primary" style="width: 100%; margin-top: 2px;">Iniciar Sesión</button>
             </form>
             
             <div style="margin-top: 20px;">
@@ -152,14 +188,69 @@
             allowAdminZero: true
         });
 
+        let failedLoginAttempts = 0;
+        const passwordInput = document.getElementById('password');
+        const passwordError = document.getElementById('password-error');
+        const loginFeedback = document.getElementById('login-feedback');
+        const loginFeedbackTitle = document.getElementById('login-feedback-title');
+        const loginFeedbackText = document.getElementById('login-feedback-text');
+        const loginFeedbackAction = document.getElementById('login-feedback-action');
+        const capsLockWarning = document.getElementById('caps-lock-warning');
+        const btnTogglePassword = document.getElementById('btn-toggle-password');
+        const eyeIconShow = document.getElementById('eye-icon-show');
+        const eyeIconHide = document.getElementById('eye-icon-hide');
+
+        // Toggle visibilidad de contraseña
+        btnTogglePassword.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            eyeIconShow.style.display = isPassword ? 'none' : 'block';
+            eyeIconHide.style.display = isPassword ? 'block' : 'none';
+            btnTogglePassword.setAttribute('aria-label', isPassword ? 'Ocultar contraseña' : 'Mostrar contraseña');
+            passwordInput.focus();
+        });
+
+        // Detección de Bloq Mayús (Caps Lock)
+        passwordInput.addEventListener('keyup', (e) => {
+            if (e.getModifierState && e.getModifierState('CapsLock')) {
+                capsLockWarning.style.display = 'block';
+            } else {
+                capsLockWarning.style.display = 'none';
+            }
+        });
+
+        // Limpiar estado de error al escribir
+        function clearLoginErrors() {
+            passwordInput.classList.remove('is-invalid');
+            passwordInput.removeAttribute('aria-invalid');
+            passwordError.style.display = 'none';
+            loginFeedback.style.display = 'none';
+        }
+
+        passwordInput.addEventListener('input', () => {
+            passwordInput.classList.remove('is-invalid');
+            passwordError.style.display = 'none';
+        });
+
+        document.getElementById('doc_numero').addEventListener('input', () => {
+            clearLoginErrors();
+        });
+
+        // Enlace de recuperación dentro del banner de error
+        document.getElementById('feedback-recuperar-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('link-recuperar-pwd').click();
+        });
+
         // 1. Manejo del Login Principal
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!cedulaCtrl.validate()) return;
             const doc = cedulaCtrl.getFormatted();
-            const pass = document.getElementById('password').value;
+            const pass = passwordInput.value;
             const btn = document.getElementById('btn-submit');
 
+            clearLoginErrors();
             btn.disabled = true;
             btn.textContent = 'Verificando...';
 
@@ -174,6 +265,7 @@
                     return;
                 }
 
+                failedLoginAttempts = 0;
                 API.showToast(`Bienvenido(a), ${res.user.nombre_completo}`, 'success');
                 setTimeout(() => {
                     window.location.href = 'index.html';
@@ -181,6 +273,54 @@
             } catch (err) {
                 btn.disabled = false;
                 btn.textContent = 'Iniciar Sesión';
+                failedLoginAttempts++;
+
+                const errMsg = err.message || '';
+                let title = 'Contraseña o Credenciales Incorrectas';
+                let desc = 'La contraseña o el documento de identidad ingresados no coinciden con ninguna cuenta activa.';
+                let isPasswordError = true;
+
+                if (errMsg.includes('inhabilitada')) {
+                    title = 'Cuenta Inhabilitada';
+                    desc = 'Su cuenta se encuentra inhabilitada. Comuníquese con la Unidad de Soporte Técnico.';
+                    isPasswordError = false;
+                } else if (errMsg.includes('privilegios')) {
+                    title = 'Acceso No Autorizado';
+                    desc = 'Este usuario no posee privilegios administrativos para acceder a este panel. El registro de asistencia se efectúa en el punto de marcación (kiosco).';
+                    isPasswordError = false;
+                } else if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('conexión')) {
+                    title = 'Error de Conexión';
+                    desc = 'No se pudo conectar con el servidor. Verifique que el servicio esté activo y revise su conexión de red.';
+                    isPasswordError = false;
+                } else {
+                    // Contraseña incorrecta
+                    if (failedLoginAttempts >= 2) {
+                        desc = `Ha ingresado una contraseña incorrecta (${failedLoginAttempts} intentos fallidos). Verifique si Bloq Mayús está activo o recupere su contraseña para evitar bloqueos.`;
+                    } else {
+                        desc = 'La contraseña suministrada es incorrecta. Verifique sus credenciales o utilice la recuperación si la ha olvidado.';
+                    }
+                }
+
+                loginFeedbackTitle.textContent = title;
+                loginFeedbackText.textContent = desc;
+                loginFeedbackAction.style.display = isPasswordError ? 'block' : 'none';
+                loginFeedback.style.display = 'flex';
+
+                if (isPasswordError) {
+                    passwordInput.classList.add('is-invalid');
+                    passwordInput.setAttribute('aria-invalid', 'true');
+                    passwordInput.setAttribute('aria-describedby', 'login-feedback');
+                    passwordError.textContent = 'Contraseña incorrecta';
+                    passwordError.style.display = 'block';
+                    passwordInput.focus();
+                    passwordInput.select();
+
+                    // Animación de vibración suave en el contenedor
+                    const box = document.querySelector('.login-box');
+                    box.classList.remove('shake-anim');
+                    void box.offsetWidth;
+                    box.classList.add('shake-anim');
+                }
             }
         });
 

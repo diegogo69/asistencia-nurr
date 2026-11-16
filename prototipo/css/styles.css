@@ -461,6 +461,128 @@ tr:hover {
     z-index: 1;
 }
 
+/* Feedback y Estados de Error en Login */
+.login-feedback {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-left: 4px solid #dc2626;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    text-align: left;
+    animation: fadeIn 0.25s ease-out;
+}
+
+.login-feedback .feedback-icon-box {
+    color: #dc2626;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.login-feedback .feedback-body {
+    flex: 1;
+}
+
+.login-feedback .feedback-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #991b1b;
+    margin-bottom: 2px;
+}
+
+.login-feedback .feedback-text {
+    font-size: 12.5px;
+    color: #7f1d1d;
+    line-height: 1.45;
+}
+
+.login-feedback .feedback-action {
+    margin-top: 6px;
+}
+
+.login-feedback .feedback-action a {
+    color: #991b1b;
+    font-weight: 600;
+    text-decoration: underline;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.login-feedback .feedback-action a:hover {
+    color: #7f1d1d;
+}
+
+/* Input error state */
+.is-invalid {
+    border-color: #dc2626 !important;
+    background-color: #fff8f8 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+}
+
+.input-error-msg {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+    font-weight: 500;
+    display: none;
+    text-align: left;
+}
+
+/* Wrapper para visibilidad de contraseña */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    padding-right: 42px !important;
+}
+
+.btn-toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6c757d;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: color 0.15s ease;
+}
+
+.btn-toggle-password:hover {
+    color: var(--primary-color);
+}
+
+.btn-toggle-password:focus {
+    outline: none;
+    color: var(--primary-color);
+}
+
+/* Animación de vibración suave al fallar */
+@keyframes shakeBox {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+}
+
+.shake-anim {
+    animation: shakeBox 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .login-logo {
     max-width: 180px;
     width: 100%;
