@@ -129,8 +129,75 @@ const API = {
             body: JSON.stringify({ documento_identidad: documento, password: password })
         });
         this.setToken(data.access_token);
-        this.setUser(data.user);
+        if (data.user) {
+            data.user.debe_cambiar_password = (data.debe_cambiar_password !== undefined) ? data.debe_cambiar_password : data.user.debe_cambiar_password;
+            this.setUser(data.user);
+        }
         return data;
+    },
+
+    async primerIngreso(email, nuevoPassword, confirmarPassword) {
+        const data = await this.request('/auth/primer-ingreso', {
+            method: 'POST',
+            body: JSON.stringify({
+                email: email,
+                nuevo_password: nuevoPassword,
+                confirmar_password: confirmarPassword
+            })
+        });
+        if (data.access_token) {
+            this.setToken(data.access_token);
+        }
+        if (data.user) {
+            this.setUser(data.user);
+        }
+        return data;
+    },
+
+    async cambiarPassword(passwordActual, nuevoPassword, confirmarPassword) {
+        return await this.request('/auth/cambiar-password', {
+            method: 'POST',
+            body: JSON.stringify({
+                password_actual: passwordActual,
+                nuevo_password: nuevoPassword,
+                confirmar_password: confirmarPassword
+            })
+        });
+    },
+
+    async solicitarRecuperacion(identificador) {
+        return await this.request('/auth/recuperar-password/solicitar', {
+            method: 'POST',
+            body: JSON.stringify({ identificador: identificador })
+        });
+    },
+
+    async verificarTokenRecuperacion(token) {
+        return await this.request('/auth/recuperar-password/verificar', {
+            method: 'POST',
+            body: JSON.stringify({ token: token })
+        });
+    },
+
+    async restablecerPassword(token, nuevoPassword, confirmarPassword) {
+        return await this.request('/auth/recuperar-password/restablecer', {
+            method: 'POST',
+            body: JSON.stringify({
+                token: token,
+                nuevo_password: nuevoPassword,
+                confirmar_password: confirmarPassword
+            })
+        });
+    },
+
+    async cambiarPasswordUsuario(userId, nuevoPassword, confirmarPassword) {
+        return await this.request(`/usuarios/${userId}/cambiar-password`, {
+            method: 'POST',
+            body: JSON.stringify({
+                nuevo_password: nuevoPassword,
+                confirmar_password: confirmarPassword
+            })
+        });
     },
 
     async logout() {
@@ -163,6 +230,11 @@ const API = {
         const token = this.getToken();
         const currentPath = window.location.pathname;
         if (!token && !currentPath.includes('login.html') && !currentPath.includes('marcacion.html')) {
+            window.location.href = 'login.html';
+            return false;
+        }
+        const user = this.getUser();
+        if (user && user.debe_cambiar_password && !currentPath.includes('login.html') && !currentPath.includes('marcacion.html')) {
             window.location.href = 'login.html';
             return false;
         }

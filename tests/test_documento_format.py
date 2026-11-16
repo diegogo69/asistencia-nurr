@@ -137,6 +137,7 @@ def test_usuario_crud_formats_stored_as_canonical(auth_headers):
     # 1. Registrar usuario enviando formato con puntos y prefijo mayúscula: E-22.333.444
     res_create = client.post("/api/v1/usuarios", json={
         "documento_identidad": "E-22.333.444",
+        "email": "elena.rivas@ula.ve",
         "nombre": "Elena",
         "apellido": "Rivas",
         "rol_id": 3,

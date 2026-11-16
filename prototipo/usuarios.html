@@ -114,8 +114,9 @@
                             <small id="error_doc" class="ci-error"></small>
                         </div>
                         <div class="form-group">
-                            <label for="email">Correo Institucional / Personal</label>
-                            <input type="email" id="email" placeholder="usuario@ula.ve">
+                            <label for="email">Correo Institucional / Personal <span style="color:red">*</span></label>
+                            <input type="email" id="email" placeholder="usuario@ula.ve" required>
+                            <small style="color: var(--text-light); font-size: 11px;">Obligatorio para todos los usuarios (medio de notificación y recuperación).</small>
                         </div>
                         <div class="form-group">
                             <label for="nombres">Nombres <span style="color:red">*</span></label>
@@ -164,6 +165,40 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary close-btn" data-modal-close>Cerrar</button>
                     <button type="submit" class="btn btn-primary" id="btn_guardar_usr">Guardar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Contraseña de Usuario (Admin) -->
+    <div class="modal-overlay" id="modal-cambiar-clave-user" style="display: none;">
+        <div class="modal" style="max-width: 450px; width: 90%;">
+            <div class="modal-header" style="background: var(--primary-color); color: white; border-radius: 8px 8px 0 0; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: white; font-size: 16px; margin: 0;">🔑 Cambiar Contraseña de Acceso</h3>
+                <button type="button" class="close-btn" onclick="document.getElementById('modal-cambiar-clave-user').style.display='none'" style="color: white; background: none; border: none; font-size: 22px; cursor: pointer;">&times;</button>
+            </div>
+            <form id="form-admin-cambiar-clave">
+                <input type="hidden" id="pwd-user-id">
+                <div class="modal-body" style="padding: 20px; text-align: left;">
+                    <p style="font-size: 13.5px; color: var(--text-color); margin-bottom: 15px;">
+                        Actualizar credencial de acceso para: <strong id="pwd-user-nombre"></strong>
+                    </p>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="admin_user_new_pwd" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Nueva Contraseña <span style="color:red">*</span></label>
+                        <input type="password" id="admin_user_new_pwd" placeholder="Mínimo 4 caracteres" minlength="4" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="admin_user_confirm_pwd" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Confirmar Nueva Contraseña <span style="color:red">*</span></label>
+                        <input type="password" id="admin_user_confirm_pwd" placeholder="Repita la contraseña" minlength="4" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                    </div>
+
+                    <div id="admin_pwd_error" style="color: var(--danger-color); font-size: 12.5px; display: none; margin-bottom: 10px;"></div>
+                </div>
+                <div class="modal-footer" style="padding: 12px 20px; background: #fafafa; border-top: 1px solid var(--border-color); border-radius: 0 0 8px 8px; display: flex; justify-content: space-between; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('modal-cambiar-clave-user').style.display='none'" style="flex: 1;">Cancelar</button>
+                    <button type="submit" id="btn-submit-user-pwd" class="btn btn-primary" style="flex: 2;">Actualizar Contraseña</button>
                 </div>
             </form>
         </div>
@@ -254,6 +289,15 @@
                         <a href="biometria.html?id=${u.id}" class="btn btn-secondary btn-icon" title="Enrolar Rostro">Biometría</a>
                     `;
 
+                    // Si el rol requiere contraseña o tiene password, mostrar botón administrativo para cambiar clave
+                    const roleObj = rolesList.find(r => r.id === u.rol_id);
+                    const reqPassword = u.tiene_password || (roleObj && roleObj.requiere_password);
+                    if (reqPassword) {
+                        actionButtons += `
+                            <button class="btn btn-secondary btn-icon" style="background:#283593; color:white; border:none;" onclick='openAdminCambiarClaveModal(${u.id}, "${escapeAttr(u.nombre_completo)}")' title="Cambiar Contraseña">Clave</button>
+                        `;
+                    }
+
                     if (u.activo) {
                         actionButtons += `
                             <button class="btn btn-warning btn-icon" style="background:#f57c00; color:white; border:none;" onclick="desactivarUsuario(${u.id}, '${escapeAttr(u.nombre_completo)}')">Inhabilitar</button>
@@ -268,7 +312,10 @@
                     return `
                         <tr style="${u.activo ? '' : 'background-color: #fafafa; opacity: 0.85;'}">
                             <td class="doc-cell" style="white-space: nowrap;"><strong>${escapeHtml(u.documento_identidad)}</strong></td>
-                            <td>${nombreComp}</td>
+                            <td>
+                                <div><strong>${nombreComp}</strong></div>
+                                <div style="font-size: 11.5px; color: var(--text-light); margin-top: 2px;">✉️ ${escapeHtml(u.email || 'Sin correo registrado')}</div>
+                            </td>
                             <td><span class="badge" style="background:#e8eaf6; color:#283593; padding:3px 7px; border-radius:4px; font-size:12px;">${escapeHtml(u.rol || 'Rol #' + u.rol_id)}</span></td>
                             <td>${escapeHtml(u.departamento || '-')}</td>
                             <td>${escapeHtml(u.horario || '-')}</td>
@@ -305,12 +352,39 @@
 
         let userCedulaCtrl = null;
 
+        function updatePasswordVisibility() {
+            const rolSelect = document.getElementById('rol_id');
+            const selectedRolId = parseInt(rolSelect.value, 10);
+            const rolObj = rolesList.find(r => r.id === selectedRolId);
+            const pwdGroup = document.getElementById('pwd_group');
+            const pwdInput = document.getElementById('password');
+            const isEdit = Boolean(document.getElementById('edit-id').value);
+
+            if (rolObj && rolObj.requiere_password) {
+                pwdGroup.style.display = 'block';
+                pwdInput.disabled = false;
+                if (!isEdit) {
+                    pwdInput.placeholder = "Ingrese la contraseña de acceso (Requerida)";
+                    pwdInput.required = true;
+                } else {
+                    pwdInput.placeholder = "Dejar en blanco para conservar la actual";
+                    pwdInput.required = false;
+                }
+            } else {
+                pwdGroup.style.display = 'none';
+                pwdInput.disabled = true;
+                pwdInput.value = '';
+                pwdInput.required = false;
+            }
+        }
+
         function openAddModal() {
             document.getElementById('modal-title').textContent = 'Agregar Nuevo Usuario';
             document.getElementById('edit-id').value = '';
             if (userCedulaCtrl) userCedulaCtrl.clear();
             if (userCedulaCtrl) userCedulaCtrl.setDisabled(false);
             document.getElementById('error_doc').style.display = 'none';
+            document.getElementById('email').value = '';
             document.getElementById('nombres').value = '';
             document.getElementById('apellidos').value = '';
             document.getElementById('departamento_id').value = '';
@@ -319,6 +393,7 @@
             document.getElementById('password').value = '';
             document.getElementById('user_activo').checked = true;
             document.getElementById('btn_guardar_usr').disabled = false;
+            updatePasswordVisibility();
             document.getElementById('modal-usuario').style.display = 'flex';
         }
 
@@ -328,6 +403,7 @@
             if (userCedulaCtrl) userCedulaCtrl.setValue(u.documento_identidad);
             if (userCedulaCtrl) userCedulaCtrl.setDisabled(false);
             document.getElementById('error_doc').style.display = 'none';
+            document.getElementById('email').value = u.email || '';
             document.getElementById('nombres').value = u.nombre || u.nombres || '';
             document.getElementById('apellidos').value = u.apellido || u.apellidos || '';
             document.getElementById('departamento_id').value = u.departamento_id || '';
@@ -336,7 +412,17 @@
             document.getElementById('password').value = '';
             document.getElementById('user_activo').checked = u.activo;
             document.getElementById('btn_guardar_usr').disabled = false;
+            updatePasswordVisibility();
             document.getElementById('modal-usuario').style.display = 'flex';
+        }
+
+        function openAdminCambiarClaveModal(userId, nombreCompleto) {
+            document.getElementById('pwd-user-id').value = userId;
+            document.getElementById('pwd-user-nombre').textContent = nombreCompleto;
+            document.getElementById('admin_user_new_pwd').value = '';
+            document.getElementById('admin_user_confirm_pwd').value = '';
+            document.getElementById('admin_pwd_error').style.display = 'none';
+            document.getElementById('modal-cambiar-clave-user').style.display = 'flex';
         }
 
         async function checkDocUniqueness() {
@@ -443,6 +529,9 @@
             document.getElementById('filter-depto').addEventListener('change', () => loadUsuarios(1));
             document.getElementById('filter-rol').addEventListener('change', () => loadUsuarios(1));
 
+            // Cambio dinámico de visibilidad de contraseña según el rol seleccionado
+            document.getElementById('rol_id').addEventListener('change', updatePasswordVisibility);
+
             // Paginación
             document.getElementById('pg-first').addEventListener('click', () => loadUsuarios(1));
             document.getElementById('pg-prev').addEventListener('click', () => { if (currentPage > 1) loadUsuarios(currentPage - 1); });
@@ -455,6 +544,7 @@
 
                 const editId = document.getElementById('edit-id').value;
                 const documento_identidad = userCedulaCtrl.getFormatted(false);
+                const email = document.getElementById('email').value.trim();
                 const nombre = document.getElementById('nombres').value.trim();
                 const apellido = document.getElementById('apellidos').value.trim();
                 const depVal = document.getElementById('departamento_id').value;
@@ -466,13 +556,14 @@
                 const activo = document.getElementById('user_activo').checked;
                 const pwd = document.getElementById('password').value.trim();
 
-                if (!documento_identidad || !nombre || !apellido || !departamento_id) {
-                    API.showToast('Por favor complete los campos requeridos (*).', 'warning');
+                if (!documento_identidad || !email || !nombre || !apellido || !departamento_id) {
+                    API.showToast('Por favor complete los campos requeridos (*), incluyendo el correo electrónico.', 'warning');
                     return;
                 }
 
                 const payload = {
                     documento_identidad,
+                    email,
                     nombre,
                     apellido,
                     departamento_id,
@@ -499,6 +590,40 @@
                     document.getElementById('modal-usuario').style.display = 'none';
                     loadUsuarios(currentPage);
                 } catch (err) {}
+            });
+
+            // Formulario para que el administrador cambie la clave de un usuario
+            document.getElementById('form-admin-cambiar-clave').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const userId = document.getElementById('pwd-user-id').value;
+                const newPwd = document.getElementById('admin_user_new_pwd').value;
+                const confirmPwd = document.getElementById('admin_user_confirm_pwd').value;
+                const errDiv = document.getElementById('admin_pwd_error');
+                const btn = document.getElementById('btn-submit-user-pwd');
+
+                errDiv.style.display = 'none';
+
+                if (newPwd !== confirmPwd) {
+                    errDiv.textContent = 'La confirmación de la contraseña no coincide.';
+                    errDiv.style.display = 'block';
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.textContent = 'Actualizando...';
+
+                try {
+                    const res = await API.cambiarPasswordUsuario(userId, newPwd, confirmPwd);
+                    API.showToast(res.message || 'Contraseña actualizada exitosamente.', 'success');
+                    document.getElementById('modal-cambiar-clave-user').style.display = 'none';
+                    loadUsuarios(currentPage);
+                } catch (err) {
+                    errDiv.textContent = err.message || 'Error al actualizar la contraseña.';
+                    errDiv.style.display = 'block';
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Actualizar Contraseña';
+                }
             });
 
             loadUsuarios(1);

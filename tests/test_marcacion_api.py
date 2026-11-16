@@ -31,6 +31,7 @@ def test_marcacion_flow_facial(auth_headers):
 
     user_res = client.post("/api/v1/usuarios", json={
         "documento_identidad": doc,
+        "email": f"carlos_{doc.replace('-', '_')}@ula.ve",
         "nombre": "Carlos",
         "apellido": "Mendoza",
         "rol_id": 4,  # Programador Contratado

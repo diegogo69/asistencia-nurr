@@ -30,12 +30,115 @@
                     <label for="password">Contraseña</label>
                     <input type="password" id="password" placeholder="Ingrese su contraseña" required>
                 </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: -8px; margin-bottom: 15px;">
+                    <a href="#" id="link-recuperar-pwd" style="color: var(--primary-color); font-size: 13px; text-decoration: none; font-weight: 500;">¿Olvidó su contraseña?</a>
+                </div>
                 
-                <button type="submit" id="btn-submit" class="btn btn-primary" style="width: 100%; margin-top: 15px;">Iniciar Sesión</button>
+                <button type="submit" id="btn-submit" class="btn btn-primary" style="width: 100%; margin-top: 5px;">Iniciar Sesión</button>
             </form>
             
             <div style="margin-top: 20px;">
                 <a href="marcacion.html" style="color: var(--primary-color); text-decoration: none; font-size: 14px;">Ir al Punto de Marcación (Kiosco) →</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Primer Inicio de Sesión Obligatorio -->
+    <div class="modal-overlay" id="modal-primer-inicio" style="display: none;">
+        <div class="modal" style="max-width: 480px; width: 90%;">
+            <div class="modal-header" style="background: #002855; color: white; border-radius: 8px 8px 0 0; padding: 16px 20px;">
+                <h3 style="color: white; font-size: 17px; margin: 0;">🔐 Primer Inicio: Seguridad Requerida</h3>
+            </div>
+            <form id="form-primer-inicio">
+                <div class="modal-body" style="padding: 20px; text-align: left;">
+                    <p style="font-size: 13.5px; color: var(--text-color); margin-bottom: 18px; line-height: 1.5;">
+                        Se ha autenticado con las credenciales preconfiguradas del sistema (<strong>v-00000000</strong>). Por motivos de seguridad institucional, debe registrar su <strong>correo electrónico</strong> institucional y generar una <strong>nueva contraseña personal</strong> antes de continuar.
+                    </p>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="first_email" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Correo Electrónico Institucional <span style="color:red">*</span></label>
+                        <input type="email" id="first_email" placeholder="ej: coordinador.soporte@ula.ve" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                        <small style="color: var(--text-light); font-size: 11px;">Este correo será el medio oficial para recuperación de acceso ante olvido de contraseña.</small>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="first_password" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Nueva Contraseña <span style="color:red">*</span></label>
+                        <input type="password" id="first_password" placeholder="Mínimo 4 caracteres (distinta a admin1234)" minlength="4" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="first_password_confirm" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Confirmar Nueva Contraseña <span style="color:red">*</span></label>
+                        <input type="password" id="first_password_confirm" placeholder="Repita la nueva contraseña" minlength="4" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                    </div>
+
+                    <div id="first_error" style="color: var(--danger-color); font-size: 12.5px; display: none; margin-bottom: 10px;"></div>
+                </div>
+                <div class="modal-footer" style="padding: 12px 20px; background: #fafafa; border-top: 1px solid var(--border-color); border-radius: 0 0 8px 8px;">
+                    <button type="submit" id="btn-save-first" class="btn btn-primary" style="width: 100%;">Establecer Credenciales y Continuar →</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Recuperación de Contraseña -->
+    <div class="modal-overlay" id="modal-recuperar" style="display: none;">
+        <div class="modal" style="max-width: 480px; width: 90%;">
+            <div class="modal-header" style="background: var(--primary-color); color: white; border-radius: 8px 8px 0 0; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: white; font-size: 17px; margin: 0;">Recuperar Contraseña de Acceso</h3>
+                <button type="button" class="close-btn" id="btn-close-recuperar" style="color: white; background: none; border: none; font-size: 22px; cursor: pointer;">&times;</button>
+            </div>
+
+            <!-- Paso 1: Solicitar Código -->
+            <div id="recuperar-paso-1">
+                <form id="form-recuperar-solicitar">
+                    <div class="modal-body" style="padding: 20px; text-align: left;">
+                        <p style="font-size: 13.5px; color: var(--text-color); margin-bottom: 18px; line-height: 1.5;">
+                            Ingrese su <strong>Documento de Identidad</strong> o su <strong>Correo Electrónico registrado</strong>. Le enviaremos un mensaje de recuperación con su token de acceso seguro.
+                        </p>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="recuperar_identificador" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Cédula o Correo Registrado</label>
+                            <input type="text" id="recuperar_identificador" placeholder="Ej: V-00000000 o usuario@ula.ve" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required autofocus>
+                        </div>
+                        <div id="recuperar_error_1" style="color: var(--danger-color); font-size: 12.5px; display: none; margin-bottom: 10px;"></div>
+                    </div>
+                    <div class="modal-footer" style="padding: 12px 20px; background: #fafafa; border-top: 1px solid var(--border-color); border-radius: 0 0 8px 8px; display: flex; justify-content: space-between; gap: 10px;">
+                        <button type="button" class="btn btn-secondary" id="btn-cancel-recuperar" style="flex: 1;">Cancelar</button>
+                        <button type="submit" id="btn-enviar-solicitud" class="btn btn-primary" style="flex: 2;">Enviar Mensaje →</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Paso 2: Restablecer Contraseña con Token -->
+            <div id="recuperar-paso-2" style="display: none;">
+                <form id="form-recuperar-confirmar">
+                    <div class="modal-body" style="padding: 20px; text-align: left;">
+                        <div style="background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 6px; padding: 12px 14px; margin-bottom: 16px; font-size: 13px; color: #2e7d32;">
+                            ✓ Mensaje de recuperación despachado. Revise su bandeja de correo en: <strong id="email-dest-enmascarado"></strong>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="recuperar_token" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Token o Código de Recuperación <span style="color:red">*</span></label>
+                            <input type="text" id="recuperar_token" placeholder="Pegue el token recibido en el correo" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="recuperar_nuevo_password" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Nueva Contraseña <span style="color:red">*</span></label>
+                            <input type="password" id="recuperar_nuevo_password" placeholder="Mínimo 4 caracteres" minlength="4" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="recuperar_confirm_password" style="display: block; font-weight: 600; margin-bottom: 5px; font-size: 13px;">Confirmar Nueva Contraseña <span style="color:red">*</span></label>
+                            <input type="password" id="recuperar_confirm_password" placeholder="Repita la nueva contraseña" minlength="4" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;" required>
+                        </div>
+
+                        <div id="recuperar_error_2" style="color: var(--danger-color); font-size: 12.5px; display: none; margin-bottom: 10px;"></div>
+                    </div>
+                    <div class="modal-footer" style="padding: 12px 20px; background: #fafafa; border-top: 1px solid var(--border-color); border-radius: 0 0 8px 8px; display: flex; justify-content: space-between; gap: 10px;">
+                        <button type="button" class="btn btn-secondary" id="btn-volver-paso-1" style="flex: 1;">Atrás</button>
+                        <button type="submit" id="btn-guardar-reset" class="btn btn-primary" style="flex: 2;">Restablecer Contraseña</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -49,6 +152,7 @@
             allowAdminZero: true
         });
 
+        // 1. Manejo del Login Principal
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!cedulaCtrl.validate()) return;
@@ -61,6 +165,15 @@
 
             try {
                 const res = await API.login(doc, pass);
+                
+                // Si el usuario requiere configurar contraseña o correo en primer inicio
+                if (res.debe_cambiar_password || (res.user && res.user.debe_cambiar_password)) {
+                    btn.disabled = false;
+                    btn.textContent = 'Iniciar Sesión';
+                    document.getElementById('modal-primer-inicio').style.display = 'flex';
+                    return;
+                }
+
                 API.showToast(`Bienvenido(a), ${res.user.nombre_completo}`, 'success');
                 setTimeout(() => {
                     window.location.href = 'index.html';
@@ -68,6 +181,151 @@
             } catch (err) {
                 btn.disabled = false;
                 btn.textContent = 'Iniciar Sesión';
+            }
+        });
+
+        // 2. Manejo de Primer Inicio de Sesión Obligatorio
+        document.getElementById('form-primer-inicio').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('first_email').value.trim();
+            const nuevoPassword = document.getElementById('first_password').value;
+            const confirmarPassword = document.getElementById('first_password_confirm').value;
+            const errDiv = document.getElementById('first_error');
+            const btn = document.getElementById('btn-save-first');
+
+            errDiv.style.display = 'none';
+
+            if (nuevoPassword === 'admin1234') {
+                errDiv.textContent = 'Por razones de seguridad, la nueva contraseña debe ser diferente a "admin1234".';
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            if (nuevoPassword !== confirmarPassword) {
+                errDiv.textContent = 'La confirmación de la contraseña no coincide con la nueva contraseña.';
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Guardando configuración...';
+
+            try {
+                const res = await API.primerIngreso(email, nuevoPassword, confirmarPassword);
+                API.showToast('Configuración inicial guardada exitosamente.', 'success');
+                document.getElementById('modal-primer-inicio').style.display = 'none';
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 800);
+            } catch (err) {
+                btn.disabled = false;
+                btn.textContent = 'Establecer Credenciales y Continuar →';
+                errDiv.textContent = err.message || 'Error al guardar la configuración inicial.';
+                errDiv.style.display = 'block';
+            }
+        });
+
+        // 3. Manejo de Modal de Recuperación de Contraseña
+        const modalRecuperar = document.getElementById('modal-recuperar');
+        const paso1 = document.getElementById('recuperar-paso-1');
+        const paso2 = document.getElementById('recuperar-paso-2');
+
+        document.getElementById('link-recuperar-pwd').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('recuperar_identificador').value = '';
+            document.getElementById('recuperar_error_1').style.display = 'none';
+            document.getElementById('recuperar_error_2').style.display = 'none';
+            paso1.style.display = 'block';
+            paso2.style.display = 'none';
+            modalRecuperar.style.display = 'flex';
+        });
+
+        document.getElementById('btn-close-recuperar').addEventListener('click', () => {
+            modalRecuperar.style.display = 'none';
+        });
+
+        document.getElementById('btn-cancel-recuperar').addEventListener('click', () => {
+            modalRecuperar.style.display = 'none';
+        });
+
+        document.getElementById('btn-volver-paso-1').addEventListener('click', () => {
+            paso2.style.display = 'none';
+            paso1.style.display = 'block';
+        });
+
+        // Enviar solicitud de recuperación
+        document.getElementById('form-recuperar-solicitar').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ident = document.getElementById('recuperar_identificador').value.trim();
+            const btn = document.getElementById('btn-enviar-solicitud');
+            const errDiv = document.getElementById('recuperar_error_1');
+
+            errDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
+
+            try {
+                const res = await API.solicitarRecuperacion(ident);
+                document.getElementById('email-dest-enmascarado').textContent = res.email_enmascarado || 'su correo registrado';
+                if (res.reset_token) {
+                    document.getElementById('recuperar_token').value = res.reset_token;
+                }
+                API.showToast('Mensaje de recuperación enviado.', 'success');
+                paso1.style.display = 'none';
+                paso2.style.display = 'block';
+            } catch (err) {
+                errDiv.textContent = err.message || 'Error al solicitar el mensaje de recuperación.';
+                errDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Enviar Mensaje →';
+            }
+        });
+
+        // Restablecer contraseña con token
+        document.getElementById('form-recuperar-confirmar').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = document.getElementById('recuperar_token').value.trim();
+            const nuevoPassword = document.getElementById('recuperar_nuevo_password').value;
+            const confirmarPassword = document.getElementById('recuperar_confirm_password').value;
+            const btn = document.getElementById('btn-guardar-reset');
+            const errDiv = document.getElementById('recuperar_error_2');
+
+            errDiv.style.display = 'none';
+
+            if (nuevoPassword !== confirmarPassword) {
+                errDiv.textContent = 'La confirmación de la contraseña no coincide con la nueva contraseña.';
+                errDiv.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Restableciendo...';
+
+            try {
+                const res = await API.restablecerPassword(token, nuevoPassword, confirmarPassword);
+                API.showToast('¡Contraseña restablecida con éxito! Ya puede iniciar sesión.', 'success');
+                modalRecuperar.style.display = 'none';
+                document.getElementById('password').value = nuevoPassword;
+            } catch (err) {
+                errDiv.textContent = err.message || 'Error al restablecer la contraseña.';
+                errDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Restablecer Contraseña';
+            }
+        });
+
+        // Si la URL contiene token de recuperación (ej: /login.html?token=xyz&mode=recovery)
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tokenParam = urlParams.get('token');
+            if (tokenParam) {
+                document.getElementById('recuperar_token').value = tokenParam;
+                document.getElementById('email-dest-enmascarado').textContent = 'enlace recibido por correo';
+                paso1.style.display = 'none';
+                paso2.style.display = 'block';
+                modalRecuperar.style.display = 'flex';
             }
         });
     </script>

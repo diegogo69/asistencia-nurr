@@ -109,11 +109,15 @@ def seed_database():
                 departamento_id=depto_soporte.id,
                 horario_id=horario_fijo.id,
                 password_hash=get_password_hash("admin1234"),
+                debe_cambiar_password=True,
+                email=None,
                 activo=True
             )
             db.add(admin_user)
             print(f"  [+] Usuario Coordinador/Admin raíz creado: {admin_doc} (Clave: admin1234)")
         else:
+            if admin_user.email is None:
+                admin_user.debe_cambiar_password = True
             print(f"  [i] Usuario admin ya existente: {admin_doc}")
 
         db.commit()
